@@ -1,0 +1,20 @@
+{
+  "mode": "local",
+  "runtime": "config/runtime.json",
+  "web_state": "state/web.db",
+  "bot_state": "state/bot.db",
+  "bot_env": "state/secrets/telegram.env",
+  "host": "127.0.0.1",
+  "port": 8000,
+  "allowed_hosts": [
+    "127.0.0.1",
+    "localhost",
+    "[::1]"
+  ],
+  "bot_enabled": true,
+  "delivery_enabled": true,
+  "log_bytes": 5242880,
+  "log_backups": 4,
+  "shutdown_seconds": 30,
+  "source_freshness_hours": 72
+}

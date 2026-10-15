@@ -1,0 +1,19 @@
+{
+  "src\\market_system\\jobs\\003_jobs.sql": "14601940781387ca8a80c753e0917fed37acf6c13870c2fc8f7a0da83cbabab1",
+  "src\\market_system\\jobs\\projection.py": "0db15abe3a66d56e4e5f9a50a9d23a2ab68609bcd7c04ed1259ee2801d74a119",
+  "src\\market_system\\jobs\\store.py": "83a6fda5ba0088ebf41add5b450c873ee8dac78dfeb55e075820dc32146c6231",
+  "src\\market_system\\jobs\\worker.py": "09d9d224c338d1bac0e09cf783c7fe82c5b0cbc9d3db91200e9c0a540b838a09",
+  "src\\market_system\\jobs\\__init__.py": "91be2f5ca0c4001da3cef6e0c5b698ba031aac980614a805653ebbf5e4d67d41",
+  "src\\market_system\\jobs\\__main__.py": "e1f170c22cd6578b32220cbd56e565d962560071fe4d7bc1b9f27c2fd0720953",
+  "src\\market_system\\web\\app.py": "0cdce078abc5134a8da28493992bba8ed95aae9ba3b444056b4c545208286fd7",
+  "src\\market_system\\web\\templates\\job.html": "14e7863eb8ca73478d4f9469c3de5239c4a973c5d73d7c949f58b2a882a6659d",
+  "src\\market_system\\web\\templates\\jobs.html": "c6632a7476a1b02b71a0f455e5e28ddb85f59fa198bd76fa3faf1ab4edf629e8",
+  "src\\market_system\\web\\templates\\base.html": "419311e0aa125fa38aaacb63c9905be0ba5356abc4af287fce948c91023205bb",
+  "tests\\test_jobs.py": "7484d7f606fce4e6a70d7830260689c78bf568f8aae1973eaf2eb5a2b882f8d1",
+  "tests\\test_jobs_web.py": "204fee4d9809969097e1f3eae8306e84840a446cdad5bb54611c43796aaa4655",
+  "scripts\\stage5_real_smoke.py": "d0fbf6efff9242ebf23d99dea26e14bbd802fa488748ceda179799c0bc02ceeb",
+  "pyproject.toml": "324c397010340626e4dfe5c15caf08eef310cb1ff8a21ccdfaeb9a599357ea53",
+  "README.md": "63e970d615ca8297028f72ca3cb0cfc22111f3e39bb6b2a06ca4c8d9f4e71ab9",
+  "docs\\CONTRACTS.md": "fe89a745b3aaf62572f75240c67f72f6ed2efb0aa1a234966a403dc8f0f1efcc",
+  "docs\\IMPLEMENTATION_STATE.md": "3bfc6d9e0a4cbb76734803357ff1e465faa5e229e26456a18d6df48407ed6456"
+}

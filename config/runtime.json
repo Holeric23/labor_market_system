@@ -1,0 +1,8 @@
+{
+  "database": "data/app.db",
+  "model": "models/ensemble_20260924T064346Z_32b7a759",
+  "skill_lexicon": "data/dictionaries/skill_lexicon.json",
+  "occupation_lexicon": "data/dictionaries/occupation_lexicon.json",
+  "annotation_database": "research/review/annotations.sqlite",
+  "dataset": "research/review/dataset.json"
+}

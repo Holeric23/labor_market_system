@@ -1,0 +1,22 @@
+{
+  "pyproject.toml": "aaa4f993636b1ca3e709eff102f9ed73ab7f467079873f15d29777aa4d5d6174",
+  "README.md": "371faba03588bcb77139f85b9697a8998cce756ef4fdccb1562da5dc9ba11c4a",
+  "docs/CONTRACTS.md": "532f22cc2b36c6dbbc41568d9569f862978d96035e92bad874250fa518b7db0f",
+  "docs/IMPLEMENTATION_STATE.md": "c32643fe67deba57b68c7a7234110035abc678110aef7d47dd5db5a116dc0d9d",
+  "scripts/check_stage8.py": "4bccd8f01a7983a6b4dbe2a405bca6550903c945f376c4a32d360f4ffaa5aeb0",
+  "tests/test_bot_catalog.py": "e34b4b308c99a0c649b7c8170283d2c5909077b67c6a89dd692b207074138609",
+  "src/market_system/jobs/__main__.py": "9f52b0936711809f130ae1f5ad796d99348fa52a3dc48bd3fdfab16dc175c422",
+  "src/market_system/jobs/worker.py": "620e85f58e33929123e4ec341cd4f17ccad17df6ac0d27e3a6679e1286d52870",
+  "src/market_system/search/store.py": "758508d734d4a67f24218d1545e028e7e63a1d0d1c9e73d7bdecb5f7d48b9508",
+  "src/market_system/review/projection.py": "8cffdcb89443d8219627f7f8e19abfe63dccaea397d268b3a9142b6f8acb4b77",
+  "src/market_system/web/app.py": "ad56c07747f57f2a51c9b55fe5f036a15d112602bcf345bbd838621b6bd2a408",
+  "src/market_system/telegram_bot/main.py": "5e4d229cc41455be6a5cecdd8212b5d0afc0f4efab52dbf9e8fafb22d84125a3",
+  "src/market_system/telegram_bot/config.py": "d7ce4ae2709f133cd2375eb45409e59b07c22e29d533534966f617b8d430dea7",
+  "src/market_system/telegram_bot/006_delivery.sql": "6579cb916d42dd13ec6836c0568e6810795fd735de9927c146736cdcc6b63929",
+  "src/market_system/telegram_bot/catalog.py": "e57b9a1b0b1bf69f979d1538f81ff1cab497acbc28ae5110c514a8b88eec699b",
+  "src/market_system/telegram_bot/store.py": "777f509a9fae5e933c653edf7af53a388762cd56613bdea5ce5c52c85b6707fd",
+  "src/market_system/telegram_bot/outbox.py": "1fc349098ea58e5870e2185209a0031bbc4bf970ec4c846203d0fabd680127a1",
+  "src/market_system/telegram_bot/delivery.py": "4801cf7d1385a0db6a65b5c5b47c63faedea8501d4e8a3b057ec5f40a97dc404",
+  "src/market_system/telegram_bot/unified.py": "cff284b4111018a27988add022086e738b917427da59a0057ce5e802bc5c776b",
+  "src/market_system/telegram_bot/security.py": "dc70cb5e39e839757a7e916c401c3531a65c62b696ba58a6dd9c7bd89434e5ff"
+}

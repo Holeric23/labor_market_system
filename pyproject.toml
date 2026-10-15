@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools==84.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "market-system"
+version = "0.1.0"
+description = "Local modular labor-market information system"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "numpy==2.4.4", "pandas==3.0.2", "scikit-learn==1.8.0",
+  "catboost==1.2.10", "joblib==1.5.3", "pymorphy3==2.0.6",
+  "scipy>=1.10", "matplotlib>=3.7", "aiogram>=3.20,<4",
+  "aiohttp>=3.9,<4", "aiohttp-socks>=0.10,<1", "pydantic>=2.7,<3",
+  "python-dotenv>=1,<2", "telethon>=1,<2", "python-socks>=2,<3",
+  "argon2-cffi>=25.1,<26", "playwright>=1.40", "fastapi>=0.115,<1", "jinja2>=3.1,<4", "uvicorn>=0.30,<1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "httpx>=0.28,<1"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["market_system*"]
+
+[tool.setuptools.package-data]
+"market_system.core.extraction" = ["*.json"]
+"market_system.core.database.database_create" = ["*.sql"]
+"market_system.core.database.database_manager" = ["queries/*.sql"]
+
+"market_system.review" = ["*.sql"]
+"market_system.analytics" = ["*.sql"]
+"market_system.model_management" = ["*.sql"]
+"market_system.telegram_bot" = ["*.sql"]
+"market_system.collection" = ["*.sql"]
+"market_system.jobs" = ["*.sql"]
+"market_system.search" = ["*.sql"]
+"market_system.web" = ["templates/*.html", "static/*.css", "static/*.js"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests/telegram"]
+cache_dir = ".artifacts/pytest-cache"
+

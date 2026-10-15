@@ -1,0 +1,17 @@
+.venv/
+.artifacts/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.env
+.env.*
+*.session*
+data/
+models/
+state/
+logs/
+backups/
+research/results/
+research/review/

@@ -1,0 +1,18 @@
+{
+  "python": "3.12",
+  "windows_install_verified": true,
+  "windows_proof": ".artifacts/stage11-clean-hashed-install.log; .artifacts/stage11-clean-pipcheck-final.log; .artifacts/stage11-real-launch-verified.log",
+  "linux_wheel_hashes_verified": true,
+  "linux_proof": ".artifacts/stage11-lock-linux-final.log (cross-platform --no-deps; not Linux execution or dependency closure test)",
+  "linux_execution_verified": false,
+  "platforms": {
+    "windows": {
+      "packages": 75,
+      "lock_sha256": "c6952aae1fbc42b75f86f8010e81a428461b6addcd82ec1ccbf31d230caae2ed"
+    },
+    "linux": {
+      "packages": 74,
+      "lock_sha256": "73d6b3f9ee180f420f11ab99803627409e6588dc5fd072637851aec752fa2705"
+    }
+  }
+}

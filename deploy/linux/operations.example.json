@@ -1,0 +1,16 @@
+{
+  "mode": "linux",
+  "runtime": "config/runtime.json",
+  "web_state": "state/web.db",
+  "bot_state": "state/bot.db",
+  "bot_env": "state/secrets/telegram.env",
+  "host": "127.0.0.1",
+  "port": 8000,
+  "allowed_hosts": ["labor.example.org"],
+  "bot_enabled": false,
+  "delivery_enabled": false,
+  "log_bytes": 5242880,
+  "log_backups": 4,
+  "shutdown_seconds": 30,
+  "source_freshness_hours": 72
+}

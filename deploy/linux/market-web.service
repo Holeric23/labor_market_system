@@ -1,0 +1,30 @@
+[Unit]
+Description=Labor market web
+After=network.target
+
+[Service]
+Type=simple
+User=labor-market
+Group=labor-market
+WorkingDirectory=/srv/labor-market
+Environment=MARKET_HOME=/srv/labor-market
+Environment=PYTHONDONTWRITEBYTECODE=1
+EnvironmentFile=-/srv/labor-market/state/secrets/service.env
+ExecStart=/srv/labor-market/.venv/bin/python -m market_system.operations web
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=45
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/labor-market/data /srv/labor-market/state /srv/labor-market/logs /srv/labor-market/backups /srv/labor-market/.artifacts
+StandardOutput=null
+StandardError=journal
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=100
+
+[Install]
+WantedBy=multi-user.target

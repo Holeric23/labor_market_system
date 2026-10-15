@@ -1,0 +1,23 @@
+# Replace domain and certificate paths. Obtain certificates separately before enabling.
+server {
+    listen 80;
+    server_name labor.example.org;
+    return 301 https://$host$request_uri;
+}
+server {
+    listen 443 ssl;
+    server_name labor.example.org;
+    ssl_certificate /etc/letsencrypt/live/labor.example.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/labor.example.org/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    client_max_body_size 256k;
+    access_log off; # private query filters stay out of proxy logs
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_read_timeout 300s;
+    }
+}

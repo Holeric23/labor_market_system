@@ -1,0 +1,23 @@
+{
+  "src\\market_system\\collection\\004_collection.sql": "4762895b39410bdf985468cec74cefcb9d8f91f87a75a08372eeea281252fea5",
+  "src\\market_system\\collection\\adapters.py": "6d48c0734d18c43ae6048d76952b0e769a4834e3c8b4868cc0baeba7f577e5d2",
+  "src\\market_system\\collection\\runner.py": "14103be9f90405c923de5df86cd3edc210e28d607e27725a86aafa5b152bc7aa",
+  "src\\market_system\\collection\\store.py": "df96a9b743571722708cac9f7c96e5b3c31f0c0ddf0e049426e78e01ec10062f",
+  "src\\market_system\\collection\\__init__.py": "f5ed57b154a05c5da955d39b6a2818361fe2ddcb8f24b848a033db895f470cf9",
+  "src\\market_system\\collection\\__main__.py": "eb383021f3202489d4d286cfca19f2a7854817adc8f2654c2fb22c4f48bcb4dd",
+  "src\\market_system\\core\\parsers\\telegram\\telegram_parser.py": "ff52bbd47eafbab71bf468eaf7188f5de1ccee741e05d4d8377ab88206712eb4",
+  "src\\market_system\\core\\parsers\\designhunters\\designhunters_parser.py": "3166b8cf0aae95aec61a2516e40f6788eef9e063f58816f5043bbc2d2fdc5ed4",
+  "src\\market_system\\jobs\\store.py": "4e2bb0e75a38cdceb7ac57965e852bf0528988972de059745069a1e9340d1832",
+  "src\\market_system\\jobs\\worker.py": "ae6c307a866618bbc0e80a6f88e89f5cb5be00611cda140c35ff239da344ec07",
+  "src\\market_system\\search\\store.py": "69283984470278aade34989e3b2a0753b6bd069ea3337f32a4794c39ec46df76",
+  "src\\market_system\\web\\app.py": "4ea31d3dd6544d90660292fb8d3f690204b6e50c18981605973b062534bc6805",
+  "src\\market_system\\web\\templates\\base.html": "1c48ae9d9bdac36a2e3b90e7117010ee4b30d8aa71a5bdafdaec04ab39cc53cc",
+  "src\\market_system\\web\\templates\\sources.html": "f72f136a2a9d2aa3d21a39af063d4c1e2fbb9a26495a495d89ce9266174696be",
+  "tests\\test_collection.py": "83c2fdcf495069bea628a8e224869915706ba24d80b0a140717e084e3df42e43",
+  "tests\\test_collection_web.py": "7f61d04d307d6c7c7ad1b43c86da93338855a872b987d24acbc582b8ada78a8b",
+  "scripts\\check_stage6.py": "ca14b427fc816046c4398ff833dbe61be5e563ffd6913faf8230683cffbc80c7",
+  "pyproject.toml": "9640b1036f5bf13a5b3607702dce7fd2217d90db0e1ac6f3e0ca0fe772acb840",
+  "README.md": "2e85abc1eaf004113c0abfd6785e8b0dfc33bcc58fbca1dbe4a524608dbb76a1",
+  "docs\\CONTRACTS.md": "54a6b076a7d03b09f5946465d3d6db0f8a17a036aeafda4d878388d5f2f690c6",
+  "docs\\IMPLEMENTATION_STATE.md": "0d06136a51fc7907999417f3c009a72529bc8c5f643640c44cce4202285a8c27"
+}

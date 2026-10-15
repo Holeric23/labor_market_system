@@ -1,0 +1,27 @@
+{% extends 'base.html' %}{% block title %}Аналитика · Рынок труда{% endblock %}{% block content %}
+<h1>Аналитика общего каталога</h1>
+<p class="alert">{{ result.inputs.limitations }}</p>
+{% if result.slice_id %}<p class="success">Неизменяемый научный срез {{ result.slice_id }} · {{ result.manifest.created_at }}. Показаны сохранённые результаты.</p>{% endif %}
+<section class="panel"><h2>Период и источники для всех отчётов</h2>
+<form method="get" action="/analytics">
+<div class="columns"><label>С даты, включительно (UTC)<input type="date" name="start" value="{{ result.inputs.filters.start or '' }}"></label><label>До даты, исключительно (UTC)<input type="date" name="until" value="{{ result.inputs.filters.until or '' }}"></label></div>
+<label>Источники (без выбора — все)<select name="sources" multiple>{% for source in options.sources %}<option value="{{ source.id }}" {% if source.id in result.inputs.filters.sources %}selected{% endif %}>{{ source.name }} · ID {{ source.id }}</option>{% endfor %}</select></label>
+<label>Тип документа<select name="post_type"><option value="">Все, с раздельными показателями</option>{% for kind in ['vacancy','resume'] %}<option value="{{ kind }}" {% if result.inputs.filters.post_type==kind %}selected{% endif %}>{{ kind|label }}</option>{% endfor %}</select></label>
+<p>Отбор по датам публикаций. Документ включён, если хотя бы одна публикация подходит. Без ограничения дат учитываются и неизвестные даты; при ограничении они исключены. Открытие фильтра строит новый отчёт.</p><button>Применить</button></form>
+<p>Версия результатов: {{ result.inputs.result_set.result_set_id }} · модель {{ result.inputs.result_set.model_version }} · алгоритм {{ result.manifest.engine_version }}</p>
+<p>Выборка: {{ result.manifest.sample_size }} уникальных документов; {{ result.manifest.publication_sample_size }} публикаций.</p>
+<p><a href="{{ prefix }}/export?{{ query }}">Скачать архив: входы, алгоритм, отчёты CSV и manifest</a></p>
+{% if not result.slice_id %}<form method="post" action="/analytics/slices"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="result_set_id" value="{{ result.inputs.result_set.result_set_id }}">
+{% for field in ['start','until','post_type'] %}<input type="hidden" name="{{ field }}" value="{{ result.inputs.filters[field] or '' }}">{% endfor %}{% for sid in result.inputs.filters.sources %}<input type="hidden" name="sources" value="{{ sid }}">{% endfor %}<button>Сохранить воспроизводимый научный срез</button></form>{% endif %}
+<details><summary>Условия, версии и контрольные суммы</summary><p>Контрольные суммы всех исходных текстов находятся в manifest выгрузки.</p><pre>{{ display_manifest|pretty }}</pre></details></section>
+{% for key,report in result.reports.items() %}<section class="panel"><h2>{{ report.title }}</h2><p>{{ report.unit }}</p>
+<p>Выборка {{ report.sample_size }} · версия {{ result.inputs.result_set.result_set_id }} · фильтр: {{ result.inputs.filters|pretty }}</p>
+<p>Исключено неоднозначных документов: <a href="{{ prefix }}/documents/{{ key }}/excluded?{{ query }}">{{ report.excluded_ambiguous }}</a>.</p>
+{% if key=='salary' %}<p>Документов с измеримыми суммами: {{ report.measured_documents }}. Неизвестные валюта или период — <a href="{{ prefix }}/documents/salary/unknown_units?{{ query }}">{{ report.unknown_units }}</a> документов; суммы не включены. Неизвестный gross/net показан отдельно.</p>{% endif %}
+<p><a href="{{ prefix }}/export?{{ query }}&amp;report={{ key }}">CSV + manifest (ZIP)</a></p>
+<div class="table-scroll"><table><thead><tr><th>Группа</th><th>Документы</th>{% if key=='volume' %}<th>Публикации</th>{% endif %}{% if key=='quality' %}<th>Доля</th>{% endif %}<th>Основания</th></tr></thead><tbody>
+{% for row in report.rows[offset:offset+50] %}<tr><td>{% for field,value in row.dimensions.items() %}<div>{{ field|label }}: {% if field in ['class_id','occupation_id','skill_id'] and value in classes %}{{ classes[value].name }} · ID {{ value }} · {{ classes[value].namespace }}{% else %}{{ value|label }}{% endif %}</div>{% endfor %}</td><td>{{ row.count }}</td>{% if key=='volume' %}<td>{{ row.publications }}</td>{% endif %}{% if key=='quality' %}<td>{{ ('%.2f'|format(row.share*100)) ~ '%' if row.share is not none else 'Нет выборки' }}</td>{% endif %}<td><a href="{{ prefix }}/documents/{{ key }}/{{ offset+loop.index0 }}?{{ query }}">Документы показателя</a></td></tr>{% else %}<tr><td colspan="5">Нет значений на этой странице</td></tr>{% endfor %}</tbody></table></div>
+<p>Групп: {{ report.rows|length }}. На странице до 50; полный набор в CSV.</p></section>{% endfor %}
+<div class="actions">{% if offset>0 %}<a href="{{ prefix }}?{{ query }}&amp;offset={{ [offset-50,0]|max }}">Предыдущие группы</a>{% endif %}<a href="{{ prefix }}?{{ query }}&amp;offset={{ offset+50 }}">Следующие группы</a></div>
+<section class="panel"><h2>Сохранённые срезы</h2>{% for item in options.slices %}<p><a href="/analytics/slices/{{ item.slice_id }}">{{ item.slice_id }}</a> · {{ item.created_at }} · {{ item.author }}</p>{% else %}<p>Срезы ещё не сохранены.</p>{% endfor %}</section>
+{% endblock %}

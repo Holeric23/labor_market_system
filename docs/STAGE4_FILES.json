@@ -1,0 +1,23 @@
+{
+  "README.md": "879a0037b642a2fd37057d1f4335895932a315b41aca5149e67b1f910ea7d6f4",
+  "pyproject.toml": "1c4106e38189cc85f55ef85a5818b3f2530ebb833b8fb0ab239b9be54f6d8191",
+  "requirements.lock.txt": "6f49d5e1fef8d1cf5e4c4c3dc4a10c6e6f6b074a93cd7549b6e3b258d4520254",
+  "docs/CONTRACTS.md": "2342f107bab28d6164d0aced28eb50d7e18592e3f8600e176d1ea35023d91567",
+  "docs/IMPLEMENTATION_STATE.md": "c4dbd00e924ebdddd809d9a2146a589c2759d54434969080e2d0130404af5a06",
+  "src/market_system/search/service.py": "0e16e145eb47da2ab2c14d7121d5a50b646588fa550411b13dddec590517b0ae",
+  "tests/test_web.py": "2a3c55d8883866b03117d556d6ce7d522a2dcd25437d67ea664b5a79756b5bde",
+  "src/market_system/web/app.py": "dc47844681d0884b0eb14045cb482fc037d6180f60f5128450eeeb8f04dc2d06",
+  "src/market_system/web/state.py": "579016772a506ba1d0d7b37d880d9fcde8cee05bdcdd57f908c958a386ddaa30",
+  "src/market_system/web/views.py": "baee33c62555ee3249a42becfbc0e200d314c5955f65dcffd985d677afeec375",
+  "src/market_system/web/__init__.py": "6b8e4c4457766b1135d8db2bedecb324d7d771ef5b31604a3327949ac14c7607",
+  "src/market_system/web/__main__.py": "84d104a15bce98456870628897d0d89c394405dcc489f1730004818f3d689851",
+  "src/market_system/web/static/forms.js": "4cfc8608d71939a85bce29cabc7068b2d3027de1f87bb52395a6867633420f76",
+  "src/market_system/web/static/style.css": "a29f0650ff840b93913b21e0648605e63bea2b74706db91eb227147daa50714c",
+  "src/market_system/web/templates/base.html": "6b4384ed1546e1f7071baa539cc1f8b6f06bdfa2765049a14862c20c9897085c",
+  "src/market_system/web/templates/card.html": "b529fd4beedef568b6c7c5149a175394e0504d34d851ba3736efef2451c9d80a",
+  "src/market_system/web/templates/catalog.html": "9a3a72835899b8acb0e15e653c470201d35a3b294ad07e6ee6b0c2727f60441b",
+  "src/market_system/web/templates/error.html": "83a52eb89087d0f0207d22b4b2edae5fb92efefe1c26a82ad17493e2ad14e906",
+  "src/market_system/web/templates/login.html": "854b90fb463fa460a5c24313eeb457cad4e19d4b4ff1f6657cb1584a7e6a8256",
+  "src/market_system/web/templates/overview.html": "4e2973b9ae7591f930ba4274547d6ad290463bb71af2acc877a3bebf54819b73",
+  "src/market_system/web/templates/settings.html": "e3b913cc502b6cd46a7ee2af06f6fdfce8fdd59b378b05314d28db1cced70af1"
+}

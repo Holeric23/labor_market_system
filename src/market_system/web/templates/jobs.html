@@ -1,0 +1,13 @@
+{% extends 'base.html' %}{% block title %}Задания{% endblock %}{% block content %}
+<h1>Задания обработки</h1>
+<p>Обработка выполняется отдельным исполнителем. Активный каталог остаётся доступным. Готовый набор не активируется автоматически.</p>
+{% if error %}<p role="alert">{{ error }}</p>{% endif %}
+<form method="post" action="/jobs" class="panel">
+<input type="hidden" name="csrf" value="{{ session.csrf }}">
+<label>Тип <select name="kind"><option value="incremental">Новые тексты / повтор выбранных</option><option value="full">Полная пересборка</option><option value="sample">Проверочная выборка (не активируется)</option></select></label>
+<label>ID документов через запятую <input name="ids" placeholder="Для выборки обязательно; для полной обработки оставьте пустым"></label>
+<label>Размер пакета <input name="batch_size" type="number" value="64" min="1" max="512" required></label>
+<label>Ключ защиты от повторного создания <input name="key" maxlength="128"></label>
+<button>Создать задание</button></form>
+{% for job in jobs %}<article class="panel"><a href="/jobs/{{ job.job_id }}">{{ job.job_id }}</a><p>{{ job.kind }} · {{ job.state }} · {{ job.progress }} / {{ job.total }} · попыток {{ job.attempts }}</p><p>{{ job.created_at }}</p></article>{% else %}<p>Заданий пока нет.</p>{% endfor %}
+{% endblock %}

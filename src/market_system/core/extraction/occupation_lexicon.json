@@ -1,0 +1,718 @@
+{
+  "version": "occupations_seed_v2",
+  "occupations": [
+    {
+      "id": "designer",
+      "name": "Дизайнер",
+      "group": "design",
+      "parent_id": null,
+      "aliases": [
+        "designer"
+      ]
+    },
+    {
+      "id": "graphic_designer",
+      "name": "Графический дизайнер",
+      "group": "design",
+      "parent_id": "designer",
+      "aliases": [
+        "дизайнер графики",
+        "graphic designer"
+      ]
+    },
+    {
+      "id": "web_designer",
+      "name": "Веб-дизайнер",
+      "group": "design",
+      "parent_id": "designer",
+      "aliases": [
+        "веб дизайнер",
+        "web designer",
+        "дизайнер сайтов"
+      ]
+    },
+    {
+      "id": "ui_ux_designer",
+      "name": "UI/UX-дизайнер",
+      "group": "design",
+      "parent_id": "designer",
+      "aliases": [
+        "UX/UI дизайнер",
+        "UI UX дизайнер",
+        "UX UI дизайнер",
+        "UX/UI-дизайнер",
+        "UI/UX дизайнер",
+        "UX дизайнер",
+        "UI дизайнер",
+        "дизайнер интерфейсов",
+        "product designer",
+        "продуктовый дизайнер"
+      ]
+    },
+    {
+      "id": "motion_designer",
+      "name": "Моушн-дизайнер",
+      "group": "design",
+      "parent_id": "designer",
+      "aliases": [
+        "моушен дизайнер",
+        "моушн дизайнер",
+        "motion designer",
+        "motion-дизайнер",
+        "моушен-дизайнер"
+      ]
+    },
+    {
+      "id": "3d_designer",
+      "name": "3D-дизайнер",
+      "group": "design",
+      "parent_id": "designer",
+      "aliases": [
+        "3D дизайнер",
+        "3D artist",
+        "3D художник",
+        "3D-художник",
+        "3д дизайнер"
+      ]
+    },
+    {
+      "id": "interior_designer",
+      "name": "Дизайнер интерьеров",
+      "group": "design",
+      "parent_id": "designer",
+      "aliases": [
+        "дизайнер интерьера",
+        "interior designer"
+      ]
+    },
+    {
+      "id": "fashion_designer",
+      "name": "Дизайнер одежды",
+      "group": "design",
+      "parent_id": "designer",
+      "aliases": [
+        "fashion designer"
+      ]
+    },
+    {
+      "id": "presentation_designer",
+      "name": "Дизайнер презентаций",
+      "group": "design",
+      "parent_id": "designer",
+      "aliases": [
+        "presentation designer"
+      ]
+    },
+    {
+      "id": "illustrator",
+      "name": "Иллюстратор",
+      "group": "design",
+      "parent_id": null,
+      "aliases": [
+        "illustrator",
+        "иллюстраторка"
+      ]
+    },
+    {
+      "id": "artist",
+      "name": "Художник",
+      "group": "design",
+      "parent_id": null,
+      "aliases": [
+        "artist",
+        "художница"
+      ]
+    },
+    {
+      "id": "animator",
+      "name": "Художник-аниматор",
+      "group": "design",
+      "parent_id": "artist",
+      "aliases": [
+        "2D аниматор",
+        "3D аниматор",
+        "аниматор графики"
+      ]
+    },
+    {
+      "id": "art_director",
+      "name": "Арт-директор",
+      "group": "design",
+      "parent_id": null,
+      "aliases": [
+        "арт директор",
+        "art director"
+      ]
+    },
+    {
+      "id": "creative_director",
+      "name": "Креативный директор",
+      "group": "design",
+      "parent_id": null,
+      "aliases": [
+        "creative director"
+      ]
+    },
+    {
+      "id": "photographer",
+      "name": "Фотограф",
+      "group": "media",
+      "parent_id": null,
+      "aliases": [
+        "photographer"
+      ]
+    },
+    {
+      "id": "retoucher",
+      "name": "Ретушер",
+      "group": "media",
+      "parent_id": null,
+      "aliases": [
+        "ретушёр",
+        "retoucher"
+      ]
+    },
+    {
+      "id": "videographer",
+      "name": "Видеограф",
+      "group": "media",
+      "parent_id": null,
+      "aliases": [
+        "видеооператор",
+        "videographer"
+      ]
+    },
+    {
+      "id": "video_editor",
+      "name": "Видеомонтажер",
+      "group": "media",
+      "parent_id": null,
+      "aliases": [
+        "видеомонтажёр",
+        "монтажер",
+        "монтажёр",
+        "video editor",
+        "режиссер монтажа"
+      ]
+    },
+    {
+      "id": "director",
+      "name": "Режиссер",
+      "group": "media",
+      "parent_id": null,
+      "aliases": [
+        "режиссёр",
+        "кинорежиссер"
+      ]
+    },
+    {
+      "id": "producer",
+      "name": "Продюсер",
+      "group": "media",
+      "parent_id": null,
+      "aliases": [
+        "producer"
+      ]
+    },
+    {
+      "id": "sound_engineer",
+      "name": "Звукорежиссер",
+      "group": "media",
+      "parent_id": null,
+      "aliases": [
+        "звукорежиссёр",
+        "sound designer",
+        "саунд-дизайнер"
+      ]
+    },
+    {
+      "id": "copywriter",
+      "name": "Копирайтер",
+      "group": "content",
+      "parent_id": null,
+      "aliases": [
+        "copywriter",
+        "копирайтерка"
+      ]
+    },
+    {
+      "id": "editor",
+      "name": "Редактор",
+      "group": "content",
+      "parent_id": null,
+      "aliases": [
+        "editor"
+      ]
+    },
+    {
+      "id": "chief_editor",
+      "name": "Главный редактор",
+      "group": "content",
+      "parent_id": "editor",
+      "aliases": [
+        "шеф-редактор",
+        "шеф редактор",
+        "editor in chief"
+      ]
+    },
+    {
+      "id": "journalist",
+      "name": "Журналист",
+      "group": "content",
+      "parent_id": null,
+      "aliases": [
+        "корреспондент",
+        "journalist",
+        "журналистка"
+      ]
+    },
+    {
+      "id": "proofreader",
+      "name": "Корректор",
+      "group": "content",
+      "parent_id": null,
+      "aliases": [
+        "proofreader"
+      ]
+    },
+    {
+      "id": "content_manager",
+      "name": "Контент-менеджер",
+      "group": "content",
+      "parent_id": null,
+      "aliases": [
+        "контент менеджер",
+        "content manager"
+      ]
+    },
+    {
+      "id": "screenwriter",
+      "name": "Сценарист",
+      "group": "content",
+      "parent_id": null,
+      "aliases": [
+        "scriptwriter",
+        "screenwriter"
+      ]
+    },
+    {
+      "id": "translator",
+      "name": "Переводчик",
+      "group": "content",
+      "parent_id": null,
+      "aliases": [
+        "translator",
+        "переводчица"
+      ]
+    },
+    {
+      "id": "marketer",
+      "name": "Маркетолог",
+      "group": "marketing",
+      "parent_id": null,
+      "aliases": [
+        "marketing specialist",
+        "маркетологиня"
+      ]
+    },
+    {
+      "id": "digital_marketer",
+      "name": "Интернет-маркетолог",
+      "group": "marketing",
+      "parent_id": "marketer",
+      "aliases": [
+        "интернет маркетолог",
+        "digital marketer",
+        "digital маркетолог"
+      ]
+    },
+    {
+      "id": "performance_marketer",
+      "name": "Performance-маркетолог",
+      "group": "marketing",
+      "parent_id": "marketer",
+      "aliases": [
+        "performance marketer",
+        "перфоманс маркетолог",
+        "перформанс маркетолог",
+        "специалист по performance-маркетингу",
+        "специалист по performance маркетингу"
+      ]
+    },
+    {
+      "id": "smm_manager",
+      "name": "SMM-менеджер",
+      "group": "marketing",
+      "parent_id": null,
+      "aliases": [
+        "SMM менеджер",
+        "SMM специалист",
+        "SMM-специалист",
+        "смм специалист",
+        "смм менеджер",
+        "смм-специалист",
+        "смм-менеджер",
+        "smmщик",
+        "сммщик",
+        "social media manager"
+      ]
+    },
+    {
+      "id": "targetologist",
+      "name": "Таргетолог",
+      "group": "marketing",
+      "parent_id": null,
+      "aliases": [
+        "targetologist",
+        "таргетологиня"
+      ]
+    },
+    {
+      "id": "seo_specialist",
+      "name": "SEO-специалист",
+      "group": "marketing",
+      "parent_id": null,
+      "aliases": [
+        "SEO специалист",
+        "SEO optimizer",
+        "SEO оптимизатор",
+        "сео специалист"
+      ]
+    },
+    {
+      "id": "context_ads_specialist",
+      "name": "Специалист по контекстной рекламе",
+      "group": "marketing",
+      "parent_id": null,
+      "aliases": [
+        "контекстолог",
+        "директолог"
+      ]
+    },
+    {
+      "id": "pr_manager",
+      "name": "PR-менеджер",
+      "group": "marketing",
+      "parent_id": null,
+      "aliases": [
+        "PR менеджер",
+        "PR специалист",
+        "PR-специалист",
+        "пиар менеджер",
+        "пиар-менеджер"
+      ]
+    },
+    {
+      "id": "brand_manager",
+      "name": "Бренд-менеджер",
+      "group": "marketing",
+      "parent_id": null,
+      "aliases": [
+        "бренд менеджер",
+        "brand manager"
+      ]
+    },
+    {
+      "id": "community_manager",
+      "name": "Комьюнити-менеджер",
+      "group": "marketing",
+      "parent_id": null,
+      "aliases": [
+        "комьюнити менеджер",
+        "community manager"
+      ]
+    },
+    {
+      "id": "email_marketer",
+      "name": "Email-маркетолог",
+      "group": "marketing",
+      "parent_id": "marketer",
+      "aliases": [
+        "email маркетолог",
+        "email marketer"
+      ]
+    },
+    {
+      "id": "crm_marketer",
+      "name": "CRM-маркетолог",
+      "group": "marketing",
+      "parent_id": "marketer",
+      "aliases": [
+        "CRM маркетолог"
+      ]
+    },
+    {
+      "id": "product_manager",
+      "name": "Продакт-менеджер",
+      "group": "management",
+      "parent_id": null,
+      "aliases": [
+        "продакт менеджер",
+        "product manager",
+        "менеджер продукта",
+        "продакт"
+      ]
+    },
+    {
+      "id": "project_manager",
+      "name": "Проджект-менеджер",
+      "group": "management",
+      "parent_id": null,
+      "aliases": [
+        "project manager",
+        "проектный менеджер",
+        "менеджер проектов",
+        "руководитель проектов",
+        "проджект менеджер",
+        "проджект"
+      ]
+    },
+    {
+      "id": "account_manager",
+      "name": "Аккаунт-менеджер",
+      "group": "management",
+      "parent_id": null,
+      "aliases": [
+        "аккаунт менеджер",
+        "account manager"
+      ]
+    },
+    {
+      "id": "sales_manager",
+      "name": "Менеджер по продажам",
+      "group": "management",
+      "parent_id": null,
+      "aliases": [
+        "sales manager"
+      ]
+    },
+    {
+      "id": "event_manager",
+      "name": "Ивент-менеджер",
+      "group": "management",
+      "parent_id": null,
+      "aliases": [
+        "event manager",
+        "ивент менеджер",
+        "менеджер мероприятий"
+      ]
+    },
+    {
+      "id": "hr_manager",
+      "name": "HR-менеджер",
+      "group": "management",
+      "parent_id": null,
+      "aliases": [
+        "HR менеджер",
+        "HR специалист",
+        "менеджер по персоналу",
+        "эйчар"
+      ]
+    },
+    {
+      "id": "recruiter",
+      "name": "Рекрутер",
+      "group": "management",
+      "parent_id": null,
+      "aliases": [
+        "recruiter",
+        "рекрутерка"
+      ]
+    },
+    {
+      "id": "assistant",
+      "name": "Ассистент",
+      "group": "management",
+      "parent_id": null,
+      "aliases": [
+        "ассистентка",
+        "бизнес ассистент",
+        "бизнес-ассистент",
+        "личный помощник"
+      ]
+    },
+    {
+      "id": "developer",
+      "name": "Разработчик",
+      "group": "engineering",
+      "parent_id": null,
+      "aliases": [
+        "developer",
+        "программист",
+        "программистка"
+      ]
+    },
+    {
+      "id": "frontend_developer",
+      "name": "Frontend-разработчик",
+      "group": "engineering",
+      "parent_id": "developer",
+      "aliases": [
+        "frontend developer",
+        "frontend разработчик",
+        "фронтенд разработчик",
+        "фронтенд-разработчик"
+      ]
+    },
+    {
+      "id": "backend_developer",
+      "name": "Backend-разработчик",
+      "group": "engineering",
+      "parent_id": "developer",
+      "aliases": [
+        "backend developer",
+        "backend разработчик",
+        "бэкенд разработчик",
+        "бэкенд-разработчик"
+      ]
+    },
+    {
+      "id": "fullstack_developer",
+      "name": "Fullstack-разработчик",
+      "group": "engineering",
+      "parent_id": "developer",
+      "aliases": [
+        "fullstack developer",
+        "full stack developer",
+        "fullstack разработчик"
+      ]
+    },
+    {
+      "id": "python_developer",
+      "name": "Python-разработчик",
+      "group": "engineering",
+      "parent_id": "developer",
+      "aliases": [
+        "Python developer",
+        "Python разработчик",
+        "питон разработчик"
+      ]
+    },
+    {
+      "id": "data_analyst",
+      "name": "Аналитик данных",
+      "group": "analytics",
+      "parent_id": null,
+      "aliases": [
+        "data analyst"
+      ]
+    },
+    {
+      "id": "business_analyst",
+      "name": "Бизнес-аналитик",
+      "group": "analytics",
+      "parent_id": null,
+      "aliases": [
+        "бизнес аналитик",
+        "business analyst"
+      ]
+    },
+    {
+      "id": "product_analyst",
+      "name": "Продуктовый аналитик",
+      "group": "analytics",
+      "parent_id": null,
+      "aliases": [
+        "product analyst"
+      ]
+    },
+    {
+      "id": "data_scientist",
+      "name": "Data Scientist",
+      "group": "analytics",
+      "parent_id": null,
+      "aliases": [
+        "дата сайентист",
+        "специалист по машинному обучению"
+      ]
+    },
+    {
+      "id": "qa_engineer",
+      "name": "Тестировщик",
+      "group": "engineering",
+      "parent_id": null,
+      "aliases": [
+        "QA engineer",
+        "QA инженер",
+        "QA-инженер"
+      ]
+    },
+    {
+      "id": "layout_designer",
+      "name": "Верстальщик",
+      "group": "design",
+      "parent_id": null,
+      "aliases": [
+        "верстальщица",
+        "вёрстальщик"
+      ]
+    },
+    {
+      "id": "architect",
+      "name": "Архитектор",
+      "group": "design",
+      "parent_id": null,
+      "aliases": [
+        "architect"
+      ]
+    },
+    {
+      "id": "stylist",
+      "name": "Стилист",
+      "group": "design",
+      "parent_id": null,
+      "aliases": [
+        "stylist"
+      ]
+    },
+    {
+      "id": "teacher",
+      "name": "Преподаватель",
+      "group": "education",
+      "parent_id": null,
+      "aliases": [
+        "учитель",
+        "teacher",
+        "преподавательница"
+      ]
+    },
+    {
+      "id": "methodologist",
+      "name": "Методист",
+      "group": "education",
+      "parent_id": null,
+      "aliases": [
+        "методолог образовательных программ"
+      ]
+    },
+    {
+      "id": "content_producer",
+      "name": "Контент-продюсер",
+      "group": "media",
+      "parent_id": "producer",
+      "aliases": [
+        "контент продюсер",
+        "content producer"
+      ]
+    },
+    {
+      "id": "author",
+      "name": "Автор текстов",
+      "group": "content",
+      "parent_id": null,
+      "aliases": [
+        "автор",
+        "автор статей"
+      ]
+    },
+    {
+      "id": "marketing_coordinator",
+      "name": "Координатор по маркетингу",
+      "group": "marketing",
+      "parent_id": null,
+      "aliases": [
+        "координатор маркетинга"
+      ]
+    }
+  ]
+}

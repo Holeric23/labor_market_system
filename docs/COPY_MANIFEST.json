@@ -1,0 +1,786 @@
+[
+  {
+    "source": "core\\__init__.py",
+    "target": "src\\market_system\\core\\__init__.py",
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "prepared_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "adapted": false
+  },
+  {
+    "source": "core\\classification\\corpus.py",
+    "target": "src\\market_system\\core\\classification\\corpus.py",
+    "source_sha256": "0ca763aab5249c0370de858cdf5878be3d9f9ec1204a636756f0b51ac3b355af",
+    "prepared_sha256": "3fa854592a22c40fcd828335d6df449a06b995eca7d38661f7ba73c8b8123c2d",
+    "adapted": true
+  },
+  {
+    "source": "core\\classification\\incremental.py",
+    "target": "src\\market_system\\core\\classification\\incremental.py",
+    "source_sha256": "4a89e2de79aefec5f045422b3857946e7ec75e9aac27c26de77456062c12aa2d",
+    "prepared_sha256": "58e714951278acbb15e00febb590fb6a1cf3cdd0c3f3b0b897496ccb394b59f1",
+    "adapted": true
+  },
+  {
+    "source": "core\\classification\\__init__.py",
+    "target": "src\\market_system\\core\\classification\\__init__.py",
+    "source_sha256": "61f01147bbde509ece9fec6151b117a893e337470af4a64ab8b1f84cda540eb5",
+    "prepared_sha256": "ddba92e13670c3381aa2c3fdbbb00264ce304a715190547f33bdcf5eee91ed7d",
+    "adapted": true
+  },
+  {
+    "source": "core\\database\\__init__.py",
+    "target": "src\\market_system\\core\\database\\__init__.py",
+    "source_sha256": "8896a93891487d4dacb96287c371dc942d058c94d9f15caa8714bc49cb2b92ce",
+    "prepared_sha256": "8896a93891487d4dacb96287c371dc942d058c94d9f15caa8714bc49cb2b92ce",
+    "adapted": false
+  },
+  {
+    "source": "core\\extraction\\extraction_diagnostics.py",
+    "target": "src\\market_system\\core\\extraction\\extraction_diagnostics.py",
+    "source_sha256": "1e0c31d942316088302bf7c1a01c4d4ca278afd5cb8c3625cc8e0b3188d95acd",
+    "prepared_sha256": "1e0c31d942316088302bf7c1a01c4d4ca278afd5cb8c3625cc8e0b3188d95acd",
+    "adapted": false
+  },
+  {
+    "source": "core\\extraction\\extraction_evaluation.py",
+    "target": "src\\market_system\\core\\extraction\\extraction_evaluation.py",
+    "source_sha256": "f394ca0f3de30456246db8332d77964508a4f62b594ed064b0c110f9a9320891",
+    "prepared_sha256": "86f9e2514eacfe709f583e65a1e8283a3792c4f205d68bc595a38f4986cba6ec",
+    "adapted": true
+  },
+  {
+    "source": "core\\extraction\\occupations.py",
+    "target": "src\\market_system\\core\\extraction\\occupations.py",
+    "source_sha256": "8d182cf0990398fe72e94e0f2112ccb961e24f55ea746f0cca624e47f1f435c3",
+    "prepared_sha256": "9d5486cc7d288fb840f4833fddaaac7ff8104b6151abf8ad6eb08706cfed72ea",
+    "adapted": true
+  },
+  {
+    "source": "core\\extraction\\occupation_lexicon.json",
+    "target": "src\\market_system\\core\\extraction\\occupation_lexicon.json",
+    "source_sha256": "89b6bced409f9103d371bc1fd3891a0cf7e5c8dd91514a59b2e7314e785680fe",
+    "prepared_sha256": "89b6bced409f9103d371bc1fd3891a0cf7e5c8dd91514a59b2e7314e785680fe",
+    "adapted": false
+  },
+  {
+    "source": "core\\extraction\\persist_profiles.py",
+    "target": "src\\market_system\\core\\extraction\\persist_profiles.py",
+    "source_sha256": "83d42fcf61ea194393ab72d8dcc2c7c9abebea109fa4a913d0747ac90404e054",
+    "prepared_sha256": "90c69bf7a720a94943b24435d29c2fb89c22fe553106dbab9ab69e28e98b5f3b",
+    "adapted": true
+  },
+  {
+    "source": "core\\extraction\\persist_skills.py",
+    "target": "src\\market_system\\core\\extraction\\persist_skills.py",
+    "source_sha256": "0cd0a33490839e731ee08eec6c6fc0d64069adca90f0a90aebe3f0ba94163e41",
+    "prepared_sha256": "fa339e5b0eba9cbf997dd7c9d701c4dd984c69a97959581a4adc8f037b16248e",
+    "adapted": true
+  },
+  {
+    "source": "core\\extraction\\run_occupations.py",
+    "target": "src\\market_system\\core\\extraction\\run_occupations.py",
+    "source_sha256": "0b7c011b0de21f08937b51be2e4b6990c6302f95cd4de2ed7cc1b7c574dbab3c",
+    "prepared_sha256": "fdab2e253b5cddae776a0a5a319527e351da5b6ce407a5ed14c6b949d8007cbb",
+    "adapted": true
+  },
+  {
+    "source": "core\\extraction\\run_salary.py",
+    "target": "src\\market_system\\core\\extraction\\run_salary.py",
+    "source_sha256": "9d73e6266825db85816870361366fdf8caf82938047bf8bdb54b3cd7f2bcec36",
+    "prepared_sha256": "e25afc0fa5c73a2f4e8c008ea2642809260164e35dca4d1dd475fe4c02de1f63",
+    "adapted": true
+  },
+  {
+    "source": "core\\extraction\\run_skills.py",
+    "target": "src\\market_system\\core\\extraction\\run_skills.py",
+    "source_sha256": "8b49ea10d05d21d5316432a0a9fe08c8a1233bacfad208094c87131bcc140465",
+    "prepared_sha256": "655ba149d5ff6eceeb2eacab51723b6b51227a2ad8121efef3bb35d3745a5f09",
+    "adapted": true
+  },
+  {
+    "source": "core\\extraction\\salary.py",
+    "target": "src\\market_system\\core\\extraction\\salary.py",
+    "source_sha256": "13e191ac731bfa36c66f81a5e9476b50423572dcda3f1f29a03741a0fab05099",
+    "prepared_sha256": "ecc059b42394b720b45f3bfc106610d29d74be442a231866d99b9978f8f640d9",
+    "adapted": true
+  },
+  {
+    "source": "core\\extraction\\skills.py",
+    "target": "src\\market_system\\core\\extraction\\skills.py",
+    "source_sha256": "44f9b879a07ab56bd48eae0d0ba6fdd94bbb9f8697864a8874935ca5b0fb2cf2",
+    "prepared_sha256": "4b84e8d3d4c46d71cd0d7194b0fd110d4226594d27518bc61c778c580778a9a2",
+    "adapted": true
+  },
+  {
+    "source": "core\\extraction\\skill_discovery.py",
+    "target": "src\\market_system\\core\\extraction\\skill_discovery.py",
+    "source_sha256": "4ad49a5cf98b87b7a1634d6472a445c964d1eaf4992d505f262d5e8f645302d2",
+    "prepared_sha256": "f0dafb3b055402238693200765b940976b33a14974e0a14be25384a08087e321",
+    "adapted": true
+  },
+  {
+    "source": "core\\extraction\\skill_evaluation.py",
+    "target": "src\\market_system\\core\\extraction\\skill_evaluation.py",
+    "source_sha256": "7420f32fcf9bd91daac2ec833c6a492b0fcb564411f6008178f0b92bdae8d0fb",
+    "prepared_sha256": "80fdc270505b2a428b78290bef3b86bcc06905283353eb4cd3b37f36a3ed4439",
+    "adapted": true
+  },
+  {
+    "source": "core\\extraction\\skill_lexicon.json",
+    "target": "src\\market_system\\core\\extraction\\skill_lexicon.json",
+    "source_sha256": "685b02607674425ed93ebe3c451a69c2e1d47933105647943ebfd3b6f3e91087",
+    "prepared_sha256": "685b02607674425ed93ebe3c451a69c2e1d47933105647943ebfd3b6f3e91087",
+    "adapted": false
+  },
+  {
+    "source": "core\\extraction\\skill_lexicon.py",
+    "target": "src\\market_system\\core\\extraction\\skill_lexicon.py",
+    "source_sha256": "f94f14e1c158b1d6decf9aeddcea9a307f64e8b69174c057fd19057d04073cf7",
+    "prepared_sha256": "f2504c084140d71472bd12cd7019c0b7f548965b3c7b0624706b6ec9ba890302",
+    "adapted": true
+  },
+  {
+    "source": "core\\extraction\\skill_statistics.py",
+    "target": "src\\market_system\\core\\extraction\\skill_statistics.py",
+    "source_sha256": "9b854e29516a4c64c6c9ed8a8ae846b774c357e8a5a797982f62831cddedac74",
+    "prepared_sha256": "9b854e29516a4c64c6c9ed8a8ae846b774c357e8a5a797982f62831cddedac74",
+    "adapted": false
+  },
+  {
+    "source": "core\\extraction\\work_conditions.py",
+    "target": "src\\market_system\\core\\extraction\\work_conditions.py",
+    "source_sha256": "54cc123175eebc82c5b9427019057569b18d1cc9b36501d6741dbe2d6486c4eb",
+    "prepared_sha256": "84ca92461847b77dc6993b7db37ada15bf76991de9daff9a8e07f85c157fa159",
+    "adapted": true
+  },
+  {
+    "source": "core\\extraction\\__init__.py",
+    "target": "src\\market_system\\core\\extraction\\__init__.py",
+    "source_sha256": "42b0a14c75c8d08f011a74bc65c64fa7d66ff6de4e179b3ea3ac19ef02cc1e6e",
+    "prepared_sha256": "14625e44732031fbcae785f1973e46270c9209dca59b394984fe9344df01199a",
+    "adapted": true
+  },
+  {
+    "source": "core\\importer\\importer.py",
+    "target": "src\\market_system\\core\\importer\\importer.py",
+    "source_sha256": "726b5754448e7b0f9d1545faa878438cb536e9507deec402bb936d54866065bf",
+    "prepared_sha256": "2dc2a1807dd1b82c3cfa042356020b0280b111d18ec066189b2853ad268549f4",
+    "adapted": true
+  },
+  {
+    "source": "core\\importer\\__init__.py",
+    "target": "src\\market_system\\core\\importer\\__init__.py",
+    "source_sha256": "2be332ae2fff401070f95aece793dbb6cbb44cd1fb596c08f8a4d18ff54f82ef",
+    "prepared_sha256": "2be332ae2fff401070f95aece793dbb6cbb44cd1fb596c08f8a4d18ff54f82ef",
+    "adapted": false
+  },
+  {
+    "source": "core\\parsers\\base_logger.py",
+    "target": "src\\market_system\\core\\parsers\\base_logger.py",
+    "source_sha256": "3097c83b85a0bc90be927dd49772410814700c6a8ea004500c88b46e77f22669",
+    "prepared_sha256": "3097c83b85a0bc90be927dd49772410814700c6a8ea004500c88b46e77f22669",
+    "adapted": false
+  },
+  {
+    "source": "core\\parsers\\parser.py",
+    "target": "src\\market_system\\core\\parsers\\parser.py",
+    "source_sha256": "2c972b06a424de4d97629b96e4bb9bb55cb48c4bf6993b154b005ad6999ef642",
+    "prepared_sha256": "69cebe3b9628663baa76ac8d5abc2e289e8fb8c4c25c362c6f6a3b8198e3dd84",
+    "adapted": true
+  },
+  {
+    "source": "core\\parsers\\__init__.py",
+    "target": "src\\market_system\\core\\parsers\\__init__.py",
+    "source_sha256": "afba019ddad24ee79daadeeb238977abc12f61c0c2ca6f944eb0017a820b1b06",
+    "prepared_sha256": "afba019ddad24ee79daadeeb238977abc12f61c0c2ca6f944eb0017a820b1b06",
+    "adapted": false
+  },
+  {
+    "source": "core\\tests\\test_corpus.py",
+    "target": "tests\\core\\test_corpus.py",
+    "source_sha256": "0ac40a1ba811595e19c267861fe9f40d81f5b27756d9818c54d73d99fc4a68b3",
+    "prepared_sha256": "b8a6eb5f403c0ff28277b53d9bfdb5e50e55d6f07d1e19ee6220eca5b9e38891",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_database.py",
+    "target": "tests\\core\\test_database.py",
+    "source_sha256": "1cfb7b261690f534ade00eff1408bd36b1cf13b5c6706e794a7bcbb0a736d77d",
+    "prepared_sha256": "c8f00f9805b526c831302392d3b841b009aed2e5f7873b8a1e30a06e733801a8",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_designhunters_parser.py",
+    "target": "tests\\core\\test_designhunters_parser.py",
+    "source_sha256": "46f10978d2162c8acb98b7b4b99dc95f26575ea61cf8366e195208cc9082b6b1",
+    "prepared_sha256": "46a891378a24cb5ca850da5c673f8707da2cedcadcca53947f480ba74d9acc95",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_extraction_evaluation.py",
+    "target": "tests\\core\\test_extraction_evaluation.py",
+    "source_sha256": "ad1940862d70cb1b68d892c9c551a17acf6565d5193e858dd633591616f63a67",
+    "prepared_sha256": "6b2e95404c29088fc3e5badb8bd94afd3cd2029e4443973efd2976affc5bfcbb",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_importer.py",
+    "target": "tests\\core\\test_importer.py",
+    "source_sha256": "a28c05686f1dd5fcc302e378390f32b46be861fa8e05f58eb953e21c5f0e920d",
+    "prepared_sha256": "58cb2bf87372539621888a5fc6b9293ace1cdbe5cfc97084f8c8bcee6b78db53",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_incremental.py",
+    "target": "tests\\core\\test_incremental.py",
+    "source_sha256": "9cd308c4fc76aea8d70df38e8cc2144cbc5fcee0163a5d4beb8d23f4016f9112",
+    "prepared_sha256": "c3bf952490b50c7ebde64e6655ead7365066fe6c2939eee6b0ce7499cf8aa26e",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_library.py",
+    "target": "tests\\core\\test_library.py",
+    "source_sha256": "bdcf27c2e06089742d32742bcbef148faeac64fe82ed5d63a6ca7fe72395c462",
+    "prepared_sha256": "d8c77d3ae3122bdf80318ce8b5b3337c9f56242b8c3fd022d44cbbb020901a1f",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_occupations.py",
+    "target": "tests\\core\\test_occupations.py",
+    "source_sha256": "807655da92a3b6db52ecda43e37e5a5abd81a92f0330ebd8d86df7afbbfbeab8",
+    "prepared_sha256": "7004003db63ed24e0668e5ddc0c0d9f65afd05518664413d00844c657b93badc",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_parser.py",
+    "target": "tests\\core\\test_parser.py",
+    "source_sha256": "64ef9b95cbb966542a73d6330b20069d21b00124c828994db461b744f89887dd",
+    "prepared_sha256": "7d80db5e2b51a06cea9bdeb3f3384de01de832425dfa844a008112910c3415c1",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_persist_profiles.py",
+    "target": "tests\\core\\test_persist_profiles.py",
+    "source_sha256": "48fa5c87379a9173730f07bacf510cf4d70c3b60a42f81c59a34b2a0b8ee5ad7",
+    "prepared_sha256": "89ff70413975fb096cb124126221b5b24e8e046724d090a856a8422488f032b9",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_persist_skills.py",
+    "target": "tests\\core\\test_persist_skills.py",
+    "source_sha256": "69f0b88572c83b737eebf20e511c867d95aa245eef6c171e3dd2b4a9f4da3f4c",
+    "prepared_sha256": "2109d98ca48d17e072b609589bbb9c179fd63387c04cf166306609927399bf1c",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_salary.py",
+    "target": "tests\\core\\test_salary.py",
+    "source_sha256": "f3c9f52a7dc710383d0b948d1cec55094e64ffaf86425993f3205fa86fee0bf4",
+    "prepared_sha256": "f84e14c03ad77da82955297a754b0330617a0ccfc4aecf6d45a24cefdfcb4ad4",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_salary_run.py",
+    "target": "tests\\core\\test_salary_run.py",
+    "source_sha256": "0b21aa467aa99c5d532ebd00b9eea82a501a3e251f729c6225a9866398b2b7a4",
+    "prepared_sha256": "69ab94b79df4a2bff33b6d006e964e79a222052327225a654934b1cf28a27040",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_skills.py",
+    "target": "tests\\core\\test_skills.py",
+    "source_sha256": "2af4aafc100347611b0ebba73dc2eeaaaafae8b21b559b03bf9f5eb210533f44",
+    "prepared_sha256": "de76d056474fec23d8d61c73a9622b02cc619dc6f35dca765248ded8526ead0c",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_skills_run.py",
+    "target": "tests\\core\\test_skills_run.py",
+    "source_sha256": "5a04a95fac2daddb3b51a85a5e414e449eba227b213c7cf54d1925a9e172f9ee",
+    "prepared_sha256": "4a0deab337a8814314243d4c889c5d3d3bb5ca89316ffb87ddee835b404fcbbc",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_skill_statistics.py",
+    "target": "tests\\core\\test_skill_statistics.py",
+    "source_sha256": "8e75735483b95a03d43bf8cdfb0827abd7a97177c28c3cd94a9fbe087b8941ba",
+    "prepared_sha256": "3a100228a34766db53e4f7898b30b91b4479a4f303d1d38ac00d79e4cf5c2146",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\test_work_conditions.py",
+    "target": "tests\\core\\test_work_conditions.py",
+    "source_sha256": "73abbdf4bd022d20b2be4630596a99164172ff9d2d44025b0e0ec6cd86cb1e2d",
+    "prepared_sha256": "e8bdd15c5d5011e17d25ebd37aba7604ccd9325526043342bd72cc1857109fe2",
+    "adapted": true
+  },
+  {
+    "source": "core\\tests\\__init__.py",
+    "target": "tests\\core\\__init__.py",
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "prepared_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "adapted": false
+  },
+  {
+    "source": "core\\utils\\dataclasses.py",
+    "target": "src\\market_system\\core\\utils\\dataclasses.py",
+    "source_sha256": "076c21ce2fe90f120418b80cc136ec437bce42388342f256565966c6b0c6b20d",
+    "prepared_sha256": "076c21ce2fe90f120418b80cc136ec437bce42388342f256565966c6b0c6b20d",
+    "adapted": false
+  },
+  {
+    "source": "core\\utils\\__init__.py",
+    "target": "src\\market_system\\core\\utils\\__init__.py",
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "prepared_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "adapted": false
+  },
+  {
+    "source": "core\\parsers\\designhunters\\designhunters_parser.py",
+    "target": "src\\market_system\\core\\parsers\\designhunters\\designhunters_parser.py",
+    "source_sha256": "048da2bafba7f3e87e016e7d7cc2bd577359e950276195eedf4a8c8a4f956039",
+    "prepared_sha256": "f958c2b853d3a5f985666a5eb674d8959e52b47df6749237c0751f282e7022a6",
+    "adapted": true
+  },
+  {
+    "source": "core\\parsers\\designhunters\\__init__.py",
+    "target": "src\\market_system\\core\\parsers\\designhunters\\__init__.py",
+    "source_sha256": "22d5f089508201bb42a393971f2f30a3b41130d8ecad1ca9dc8581222efd7b71",
+    "prepared_sha256": "22d5f089508201bb42a393971f2f30a3b41130d8ecad1ca9dc8581222efd7b71",
+    "adapted": false
+  },
+  {
+    "source": "core\\parsers\\telegram\\telegram_parser.py",
+    "target": "src\\market_system\\core\\parsers\\telegram\\telegram_parser.py",
+    "source_sha256": "e0182120d521ded9dd8ba92309b841af15e15c789fa122b1b0b4648a3bac3335",
+    "prepared_sha256": "810b74bd474ffc4c62a46cce2a5a815a714096ef93c94eaf0c6dc9933b05499d",
+    "adapted": true
+  },
+  {
+    "source": "core\\parsers\\telegram\\__init__.py",
+    "target": "src\\market_system\\core\\parsers\\telegram\\__init__.py",
+    "source_sha256": "0b129c13a7ab3c024cff375b35f5430aa137f2ca1a6bc2e38fe924f07ca943f7",
+    "prepared_sha256": "0b129c13a7ab3c024cff375b35f5430aa137f2ca1a6bc2e38fe924f07ca943f7",
+    "adapted": false
+  },
+  {
+    "source": "core\\database\\database_create\\database_create.py",
+    "target": "src\\market_system\\core\\database\\database_create\\database_create.py",
+    "source_sha256": "3f0cd5795aa24b0b05cee9cf81032023e9f32d1e0bcc771683fc40a1b8104177",
+    "prepared_sha256": "13ccc0fe61bb90cbbf48720c4abadac8ca399a7a9b48bd69f9dcf97ce9e7c105",
+    "adapted": true
+  },
+  {
+    "source": "core\\database\\database_create\\schema.sql",
+    "target": "src\\market_system\\core\\database\\database_create\\schema.sql",
+    "source_sha256": "19d0fbf32ff0f1f7b36479dfd5f658aba2c3338c60a9951745ab4ce8c7c95428",
+    "prepared_sha256": "19d0fbf32ff0f1f7b36479dfd5f658aba2c3338c60a9951745ab4ce8c7c95428",
+    "adapted": false
+  },
+  {
+    "source": "core\\database\\database_create\\__init__.py",
+    "target": "src\\market_system\\core\\database\\database_create\\__init__.py",
+    "source_sha256": "07d94cdb09b5dbe6f1b0072f845e2c65003e1e6b6430925e41d4ef95981acda0",
+    "prepared_sha256": "07d94cdb09b5dbe6f1b0072f845e2c65003e1e6b6430925e41d4ef95981acda0",
+    "adapted": false
+  },
+  {
+    "source": "core\\database\\database_manager\\database_manager.py",
+    "target": "src\\market_system\\core\\database\\database_manager\\database_manager.py",
+    "source_sha256": "15d4a746b0b9a3c64c00aaa47e6d655d69640bb0d3554e14227a709706505498",
+    "prepared_sha256": "15d4a746b0b9a3c64c00aaa47e6d655d69640bb0d3554e14227a709706505498",
+    "adapted": false
+  },
+  {
+    "source": "core\\database\\database_manager\\__init__.py",
+    "target": "src\\market_system\\core\\database\\database_manager\\__init__.py",
+    "source_sha256": "71441002ee3460b928c235ba8e2242044df1a2677448ca8eef68c662070a6150",
+    "prepared_sha256": "71441002ee3460b928c235ba8e2242044df1a2677448ca8eef68c662070a6150",
+    "adapted": false
+  },
+  {
+    "source": "core\\database\\database_manager\\queries\\content.sql",
+    "target": "src\\market_system\\core\\database\\database_manager\\queries\\content.sql",
+    "source_sha256": "7a14d7e5b8c8ef3199b04a692af2afd0c6cf777b04c2f0e62bc87b1c8ebf4dbc",
+    "prepared_sha256": "7a14d7e5b8c8ef3199b04a692af2afd0c6cf777b04c2f0e62bc87b1c8ebf4dbc",
+    "adapted": false
+  },
+  {
+    "source": "core\\database\\database_manager\\queries\\publication.sql",
+    "target": "src\\market_system\\core\\database\\database_manager\\queries\\publication.sql",
+    "source_sha256": "cfe7675a486b72e291595157bf1f20cd027bb0f58f68f6ddede0c00059eaa03d",
+    "prepared_sha256": "cfe7675a486b72e291595157bf1f20cd027bb0f58f68f6ddede0c00059eaa03d",
+    "adapted": false
+  },
+  {
+    "source": "core\\database\\database_manager\\queries\\source.sql",
+    "target": "src\\market_system\\core\\database\\database_manager\\queries\\source.sql",
+    "source_sha256": "f1e8cf24d910f7e339227f553a4152e6550ca4546596ed1f0198a94c0e8c9db3",
+    "prepared_sha256": "f1e8cf24d910f7e339227f553a4152e6550ca4546596ed1f0198a94c0e8c9db3",
+    "adapted": false
+  },
+  {
+    "source": "core\\database\\database_manager\\queries\\source_type.sql",
+    "target": "src\\market_system\\core\\database\\database_manager\\queries\\source_type.sql",
+    "source_sha256": "a2be4baa22076359bb7ccb6dba9c06e250b0a4c32cd3d7f0a358afd3ff5466c8",
+    "prepared_sha256": "a2be4baa22076359bb7ccb6dba9c06e250b0a4c32cd3d7f0a358afd3ff5466c8",
+    "adapted": false
+  },
+  {
+    "source": "labor_market\\evaluation.py",
+    "target": "src\\market_system\\labor_market\\evaluation.py",
+    "source_sha256": "47055cf09040aac7a0c976a12447f512a77e7194c3ba67f44c45859ed6419fb7",
+    "prepared_sha256": "1ad8582dab19c3f79a8fa0c60ad5c51e09edcab4f3b5642bc3f452bbf0dd6b25",
+    "adapted": true
+  },
+  {
+    "source": "labor_market\\model.py",
+    "target": "src\\market_system\\labor_market\\model.py",
+    "source_sha256": "92506fa6e7c59a247410d4fa20b2661c4cd9944176f17e056e6df210fd5117e7",
+    "prepared_sha256": "c346323e02a5d3eecb9fa5ec4e3274db75eee60bf421b4259c965ba9f354db11",
+    "adapted": true
+  },
+  {
+    "source": "labor_market\\pipeline.py",
+    "target": "src\\market_system\\labor_market\\pipeline.py",
+    "source_sha256": "c0a7b627dd3e5ba6fc20978160c4d7857ab921f4e136b8c0b4a7ee0157212c5c",
+    "prepared_sha256": "74f7efdd74f58b7b7a8e0089a1c80de044561993f690c9411f2d52b83c6caf92",
+    "adapted": true
+  },
+  {
+    "source": "labor_market\\training.py",
+    "target": "src\\market_system\\labor_market\\training.py",
+    "source_sha256": "383cd57446ca1bc61d20f33b8007820988545a158c6a80b4931043926606136c",
+    "prepared_sha256": "df5c36f8d7c56c1e4c73094115934d661307a19bd3cf98696a837c58e094e188",
+    "adapted": true
+  },
+  {
+    "source": "labor_market\\__init__.py",
+    "target": "src\\market_system\\labor_market\\__init__.py",
+    "source_sha256": "01150569aabca018e205f9f19f8b4bef1192dc412e6df8f5deceac2623bf6094",
+    "prepared_sha256": "895930d8e03cf4f8be1e7692f5550f110460fad69a5535744d096db5795e4ef8",
+    "adapted": true
+  },
+  {
+    "source": "research\\annotation.py",
+    "target": "src\\market_system\\research\\annotation.py",
+    "source_sha256": "c18f89c816f9bd3bdabb5cab8fd365bbac2404f70ef97419c89ba38acb63210c",
+    "prepared_sha256": "f235b07c3407a2c16163f3d8ac774c3be4dcda15a79cb99ab0f581d38ec8b76c",
+    "adapted": true
+  },
+  {
+    "source": "research\\architectures.py",
+    "target": "src\\market_system\\research\\architectures.py",
+    "source_sha256": "d28a4b6d02144d46bf2e3944992056b69994f7fbbb6a76b54975fc3d3f98d48b",
+    "prepared_sha256": "390077b452b01e805d536c4d33d3bfceaa436cdc7d4e60204a27465a370c0aa5",
+    "adapted": true
+  },
+  {
+    "source": "research\\architecture_report.py",
+    "target": "src\\market_system\\research\\architecture_report.py",
+    "source_sha256": "aaabb115476850c41a45c2e61dff8e6ec61a0e4f336362605d7d09c26c19dc11",
+    "prepared_sha256": "93373ea5c8f4caf03ebe62680108a07def650c7343f832c2ec62fcff930dfe5e",
+    "adapted": true
+  },
+  {
+    "source": "research\\benchmark.py",
+    "target": "src\\market_system\\research\\benchmark.py",
+    "source_sha256": "b833199b48e8945b6d71737fbf8e8b75f86ebb5d3f12b3070a3e5872a3f310a4",
+    "prepared_sha256": "ff1c6baa298fca6ce0a41fe20f826cfb71912c18c269e408a46359ab71cf5e67",
+    "adapted": true
+  },
+  {
+    "source": "research\\extraction.py",
+    "target": "src\\market_system\\research\\extraction.py",
+    "source_sha256": "3835757fdf475148032c1cc79bbdc64e93e2ce4bf20311a754491013b5d5397a",
+    "prepared_sha256": "850e12e5138acb882d30fab9553d0728efa3f5d84966a81f03deeb72fd5e7d0f",
+    "adapted": true
+  },
+  {
+    "source": "research\\pilot_annotations.py",
+    "target": "src\\market_system\\research\\pilot_annotations.py",
+    "source_sha256": "446df40233159bd6e2131c5cf81d50c1ad93eaec7f977617669cf9ff91bf5154",
+    "prepared_sha256": "d6220086e881372495163747cc98d29c9283c64fbbb3d831d0b209011084b6b5",
+    "adapted": true
+  },
+  {
+    "source": "research\\policy_comparison.py",
+    "target": "src\\market_system\\research\\policy_comparison.py",
+    "source_sha256": "0eb4e8351d412c0792ad77cd1eba4c8a60dad458666e7c6073343f8e0dd11898",
+    "prepared_sha256": "c0070e3f0b855e37a5dda27fac1318c8f3e32a589e1e3ab9758ee376d36b81fc",
+    "adapted": true
+  },
+  {
+    "source": "research\\precision_benchmark.py",
+    "target": "src\\market_system\\research\\precision_benchmark.py",
+    "source_sha256": "71f0a84b60c0ab7f122855602ecb33f4ec954dcfe662603c1ca5771436f94095",
+    "prepared_sha256": "2152db8d934a54e7a13410c0a8047fca42f2f551bd9373cc5ffdcd0fba820d8d",
+    "adapted": true
+  },
+  {
+    "source": "research\\precision_report.py",
+    "target": "src\\market_system\\research\\precision_report.py",
+    "source_sha256": "6620d20d1f58c87ed3e1cb6ec6eddda2c68b4cbd415de3138c24518df7cb8a0e",
+    "prepared_sha256": "594da8ce5bcd4c7017b5c8154067391a3945dbbaae5f920122318a6908e7333c",
+    "adapted": true
+  },
+  {
+    "source": "research\\report.py",
+    "target": "src\\market_system\\research\\report.py",
+    "source_sha256": "da96b0a776c349cf53401937e2f6e49524d9193d7114af0329f4cc153b6791be",
+    "prepared_sha256": "5976c4ddc8255bc180446ee900151cc310d61d4a394b8409113b2dad4c417beb",
+    "adapted": true
+  },
+  {
+    "source": "research\\review_server.py",
+    "target": "src\\market_system\\research\\review_server.py",
+    "source_sha256": "e2c64cc8f85728f9d8261a6f6ed39f98dc07e73dd7faf510f96f3e4091c0dd02",
+    "prepared_sha256": "9631da64066ccbd428841ee92dc00b274c2f7b218cca58b496823093dee2a4a9",
+    "adapted": true
+  },
+  {
+    "source": "research\\run.py",
+    "target": "src\\market_system\\research\\run.py",
+    "source_sha256": "e7cb2c89eb14794b8ec4691f28f971ce96fb441842a7dd77e60846ba02934d40",
+    "prepared_sha256": "8d23a4554e23bf8da51967071f4f995f2e9e843508d3c121e1c58bfea33bdc00",
+    "adapted": true
+  },
+  {
+    "source": "research\\selection_pipeline.py",
+    "target": "src\\market_system\\research\\selection_pipeline.py",
+    "source_sha256": "9b3cff53af74a8efe5d348fc03f9cba819d6a6f769cb899ce0f3b43e9412df7a",
+    "prepared_sha256": "c24df98909cc441225b5e4cf994f3bb619214145152af03ed4c778c14ca8e4f9",
+    "adapted": true
+  },
+  {
+    "source": "research\\selection_report.py",
+    "target": "src\\market_system\\research\\selection_report.py",
+    "source_sha256": "053d67999c710dafc30982df1f8a8c8430b1f3bf53492994e91c8b3c2dc309b5",
+    "prepared_sha256": "fcc166948b58089a76a5f9ba51d150ed4c993b1ecdcc799328b6c0f4c094e6d4",
+    "adapted": true
+  },
+  {
+    "source": "research\\test_architectures.py",
+    "target": "tests\\research\\test_architectures.py",
+    "source_sha256": "45822a8dfbfe3967b4315b0cb484f8ffd7afc84c3cc76fbbe4785fe1c2d108ad",
+    "prepared_sha256": "cb42c35c71b5f01c7ed72f9728b1c04711f8ab9408cd89e2dec177b8a9ddf650",
+    "adapted": true
+  },
+  {
+    "source": "research\\test_precision_benchmark.py",
+    "target": "tests\\research\\test_precision_benchmark.py",
+    "source_sha256": "d6a4fbfea6bfb495138e10038d970eea8c1da786ce2603fdf9c9247f3bb02fba",
+    "prepared_sha256": "5e86be3180950f0d756596e478af1e93b954e0b102d77d7954f7c1c2ec7a95ba",
+    "adapted": true
+  },
+  {
+    "source": "research\\test_research.py",
+    "target": "tests\\research\\test_research.py",
+    "source_sha256": "beb4fae623385e8909f6e039a42cc7547841daaac504a05780c81589fca8e026",
+    "prepared_sha256": "2fb0fd274f88ff89092a888bb6f083f9e93c350b8c1900cd37301aa63d8fe125",
+    "adapted": true
+  },
+  {
+    "source": "research\\test_selection_pipeline.py",
+    "target": "tests\\research\\test_selection_pipeline.py",
+    "source_sha256": "8ab1d281054a90fcd7f93c5aeb6aa751fe66abc7b7e3b94cb0056659527d06df",
+    "prepared_sha256": "4489f97f8551003d0d9afc5aae9d9b7e0adc3377a819707e33f1a868a356884c",
+    "adapted": true
+  },
+  {
+    "source": "research\\__init__.py",
+    "target": "src\\market_system\\research\\__init__.py",
+    "source_sha256": "68905204a72d8942601c9bc5c7cad6b47db5e502178331be8ca358612b5ec650",
+    "prepared_sha256": "89ea5101326d6429be001d11343ba3f6ee83c477b952bc97b87876cced8ff2af",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\bootstrap.py",
+    "target": "src\\market_system\\telegram_bot\\bootstrap.py",
+    "source_sha256": "d7360ec823123dca21959a859e58b87718a3e96f9611b6bfef967543b649e5ed",
+    "prepared_sha256": "29aceff161782e1ae7bae793c78da4c60375ee40cb455eae68a069bbebb048d3",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\check_database.py",
+    "target": "src\\market_system\\telegram_bot\\check_database.py",
+    "source_sha256": "052a059b58e78bf5ee11390aa9ba21b34270a68bca61130d6ac1779a8776f658",
+    "prepared_sha256": "cd8689fda672fbc12da75eae4032ce381f91d089f1ffb29eeca0fb46612c4c0f",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\config.py",
+    "target": "src\\market_system\\telegram_bot\\config.py",
+    "source_sha256": "653c8c68214f0f07a7be8a8d8c77ad401d0f688fa4263e3a8a4948174d256041",
+    "prepared_sha256": "000221b3064dd8783309df6017093270c25eae2611bcebdf0bcac47096951160",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\main.py",
+    "target": "src\\market_system\\telegram_bot\\main.py",
+    "source_sha256": "dc8cd8a10a7f970b237df7917d0ff25de31f4daa525b4e391cd6756f5e7df3a3",
+    "prepared_sha256": "01629998c5c94b437c732ea4b50d83ca44165c7d101d2143aa1df55e3e83a1c3",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\__init__.py",
+    "target": "src\\market_system\\telegram_bot\\__init__.py",
+    "source_sha256": "3c4b5063917eaf3f2e9117530267115778f7aaf4f5f65ce585f75c9c0e008125",
+    "prepared_sha256": "beb70c0eb10f3234833bacc3e12370e65b0fdca66a19d62b51033621edcfc38c",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\__main__.py",
+    "target": "src\\market_system\\telegram_bot\\__main__.py",
+    "source_sha256": "bc143cdb7df8917d3a2260db1653c582205188b2229f0364df3f0a86cea177be",
+    "prepared_sha256": "8eab0c228dd3ac4b30cfd48e7bbeff276a49722133cdbc21321d770977e39a4b",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\application\\services.py",
+    "target": "src\\market_system\\telegram_bot\\application\\services.py",
+    "source_sha256": "e64980cb32052063bd85176a59def50c02607eb2234ff738cd52da3faef3a4e7",
+    "prepared_sha256": "0f2f28a87b41372243ec1c98d41e993cf2b684a17a22c18c870c7cd1b0fa8738",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\application\\session.py",
+    "target": "src\\market_system\\telegram_bot\\application\\session.py",
+    "source_sha256": "e74be27593114258e250f6e5334cf61ab17db3d4878c6330b4ce02d49fa401e0",
+    "prepared_sha256": "eaa8f61eb4ddc0f0ebb8c8429ec121be063693e652814ead69fec1d63f321b35",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\application\\__init__.py",
+    "target": "src\\market_system\\telegram_bot\\application\\__init__.py",
+    "source_sha256": "44e6d86c363840a3493fae78b7424f54a7559f85fc32b75e5218673b79049c8c",
+    "prepared_sha256": "b6eed0a61005236f964f5fbf94577c49885ae0733147665cebd23fa8104238b5",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\domain\\matching.py",
+    "target": "src\\market_system\\telegram_bot\\domain\\matching.py",
+    "source_sha256": "5bef38a71d62705583778da651b62a92b99ac9c0ae83958e093ea150d262fb88",
+    "prepared_sha256": "9175dae3a06207bb5c3caa56384386a51f01500b5b3422a9d69cf1cb5c87b529",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\domain\\models.py",
+    "target": "src\\market_system\\telegram_bot\\domain\\models.py",
+    "source_sha256": "9e5c72b08592f5a3b892e29f1742700737c131ed1184ec844b7a01ddb2b4a0ea",
+    "prepared_sha256": "dfed4308ac0f033d24d563b30cbf9d21f9c51419390feea4ebce48a0e629bd82",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\domain\\ports.py",
+    "target": "src\\market_system\\telegram_bot\\domain\\ports.py",
+    "source_sha256": "b824fa0c8d0098223d5085172d400f83ebc7b542371ad1a300ab1c0f19ceae4d",
+    "prepared_sha256": "fa02586026bf2eefe6637d22698878d2ed0e652cad1ed4ca5bf0d8e11c850a93",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\domain\\__init__.py",
+    "target": "src\\market_system\\telegram_bot\\domain\\__init__.py",
+    "source_sha256": "c7609099f415e4cd7585548f7ac9829b768aad9b3a329f5066e06f3a8432264c",
+    "prepared_sha256": "d340cc21afa3e3327917ad7a4b3a23e64713ebba42e65207c63001b34e675634",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\infrastructure\\memory.py",
+    "target": "src\\market_system\\telegram_bot\\infrastructure\\memory.py",
+    "source_sha256": "2f76da44e132a9dffb36932037a5c3c5f9497c09dc6c8b25011bd04f77f8af1e",
+    "prepared_sha256": "d1659c9ec767378bfc8fd9f0fc111aa750fbe781e31f24c1e46affa6d5641f3f",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\infrastructure\\research.py",
+    "target": "src\\market_system\\telegram_bot\\infrastructure\\research.py",
+    "source_sha256": "2f933ad2eefbd6a38423403a5d8595c8c96eac05b00453f27b2519ec73d30ac5",
+    "prepared_sha256": "d27f1bc5950f3df5ce2592f5be5dc41f8bfc5e2677da662cb8a52d7170aecd73",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\infrastructure\\sqlite_state.py",
+    "target": "src\\market_system\\telegram_bot\\infrastructure\\sqlite_state.py",
+    "source_sha256": "81a19f24ef240570f477480e18517bda9ca64a3e96b1a65b988bd2e5a3685df4",
+    "prepared_sha256": "c12e2ff4c66c332f742f664147144e6666d83531995c850234de2b8abcbbbac5",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\infrastructure\\telegram.py",
+    "target": "src\\market_system\\telegram_bot\\infrastructure\\telegram.py",
+    "source_sha256": "b6bd36379fbd96dbbfb87f7381ce9e8e2555e8cfcb7c503de5d4030e6ae419bb",
+    "prepared_sha256": "4ae8332477a0698df960366e75729dd53a9e62bf663746e26a270fc7dab4634c",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\infrastructure\\__init__.py",
+    "target": "src\\market_system\\telegram_bot\\infrastructure\\__init__.py",
+    "source_sha256": "c5098b360fe95543d030c17aa1e4333574c1a351307329ebc42caabd33460f94",
+    "prepared_sha256": "9c4040ea104347ca729ae61fffcbd7a1dc12c8aee94338b8f9e04a1ca2d00b82",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\presentation\\controller.py",
+    "target": "src\\market_system\\telegram_bot\\presentation\\controller.py",
+    "source_sha256": "a87c74b8883aed81837f790169537b99e18663c3ac861e23d865019f42b516dd",
+    "prepared_sha256": "7a83e46004d69054d4c5917f0793acd49fc0234a028b4601837fdc2c16350c5a",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\presentation\\events.py",
+    "target": "src\\market_system\\telegram_bot\\presentation\\events.py",
+    "source_sha256": "ee9f235aa8c23d322f17b4957a2d5a4fae0a54a5c524d0cbe510c7fdf12db525",
+    "prepared_sha256": "be7fc30177e37d42297cd5567c8179c32ccb62eaf702d3854c7121714a4fa611",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\presentation\\router.py",
+    "target": "src\\market_system\\telegram_bot\\presentation\\router.py",
+    "source_sha256": "584c17634362f3416dcf1f72efcb52b65d93c4558e0a1d8cb6b8b5d17797f5e6",
+    "prepared_sha256": "7d782e4f5d85943955c8cd7e449a5761adf946f6939db683598e149c469c5e17",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\presentation\\views.py",
+    "target": "src\\market_system\\telegram_bot\\presentation\\views.py",
+    "source_sha256": "bce20e9c884c4d5e11ccdde8d6a4a6720bafc53800e4fde690eff28625b3bac3",
+    "prepared_sha256": "16c76e86f379b30898465c8722c5e2d3c38a9021ea61b5b3a4cdcdeac1b2117b",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\src\\job_bot\\presentation\\__init__.py",
+    "target": "src\\market_system\\telegram_bot\\presentation\\__init__.py",
+    "source_sha256": "fea569e6444f3d6a31d86b8057ad2ae9e75add7f56eda52889c484b0199c0059",
+    "prepared_sha256": "b412139dcc4f626d6d4a86c2146f09a03888eecd60b011c6b1e54bb7e4ff4f72",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\tests\\test_config.py",
+    "target": "tests\\telegram\\test_config.py",
+    "source_sha256": "b636af86306af4529f3bf111f5765c3623b5aecce88eb68e153770b3fc4d7412",
+    "prepared_sha256": "47e241ff3482244423ce930e2467df0cc73b4cfa73273eba1bbea600c4e85c2d",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\tests\\test_sqlite.py",
+    "target": "tests\\telegram\\test_sqlite.py",
+    "source_sha256": "1d5c9aafafc0c4701a5d81f66dc792ac051bd20e77c8bebf5f042352d8388097",
+    "prepared_sha256": "aa141feef8d60680ec60caff5627e247330e7519d9933b15a6ab932c407e2e44",
+    "adapted": true
+  },
+  {
+    "source": "telegram_bot\\tests\\test_system.py",
+    "target": "tests\\telegram\\test_system.py",
+    "source_sha256": "3eec3ae0ea063a05ae121ce0d2842b44f7754470c4aae3a15e63d6264cf552a1",
+    "prepared_sha256": "00c745389fa71db059685e0ea1210ffeb28c73f54d6174ffa89b9d6749b0fa75",
+    "adapted": true
+  },
+  {
+    "source": "docs\\system_plan.md",
+    "target": "docs\\system_plan.md",
+    "source_sha256": "5524d2f1f56d74c4530f89a2a9445c4ca12edd4455badb918ac0ce59ad9104ce",
+    "prepared_sha256": "5524d2f1f56d74c4530f89a2a9445c4ca12edd4455badb918ac0ce59ad9104ce",
+    "adapted": false
+  }
+]

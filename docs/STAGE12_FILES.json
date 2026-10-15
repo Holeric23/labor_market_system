@@ -1,0 +1,11 @@
+{
+  "files_sha256": {
+    "README.md": "3422d5afc1a725d6bfa21dc6a311345e26d67393c76ed866d49e3cb0d82571f3",
+    "docs/IMPLEMENTATION_STATE.md": "93909d0772022cddd49148a99b80ecf3e860a225105a8a4ee6eedccde413c7cc",
+    "docs/ACCEPTANCE.md": "97a1390f6e1a51754a9ebfa394957bd254d6543a19bc71044ec654df9005bdb4",
+    "scripts/check_stage0.py": "6925bcff95bdafcef444ca770125c2ce5ee85a6bc325f538bb0e68b34e753347",
+    "scripts/check_stage12.py": "570cfa7179b08efa010b690d2e622a99596db1c5e2721fb7c5307cdcbdab492c",
+    "scripts/check_stage12_preservation.py": "023a5bfdfafa2506ebeb1672164b5f859bafd3622aa7dbf7b6a68549a0079e13"
+  },
+  "scope": "Acceptance scripts and factual documentation only; no product code/schema changes"
+}

@@ -1,0 +1,982 @@
+{
+  "version": "seed_v1",
+  "description": "Starter skills, not an exhaustive taxonomy. New synonyms require review.",
+  "skills": [
+    {
+      "id": "figma",
+      "name": "Figma",
+      "category": "design_tools",
+      "aliases": [
+        "фигма",
+        "фигме",
+        "фигму",
+        "фигмой"
+      ]
+    },
+    {
+      "id": "photoshop",
+      "name": "Adobe Photoshop",
+      "category": "design_tools",
+      "aliases": [
+        "Photoshop",
+        "фотошоп"
+      ]
+    },
+    {
+      "id": "illustrator",
+      "name": "Adobe Illustrator",
+      "category": "design_tools",
+      "aliases": [
+        "Illustrator",
+        "иллюстратор"
+      ]
+    },
+    {
+      "id": "indesign",
+      "name": "Adobe InDesign",
+      "category": "design_tools",
+      "aliases": [
+        "InDesign",
+        "индизайн"
+      ]
+    },
+    {
+      "id": "after_effects",
+      "name": "Adobe After Effects",
+      "category": "design_tools",
+      "aliases": [
+        "After Effects",
+        "AfterEffects",
+        "афтер эффектс"
+      ]
+    },
+    {
+      "id": "premiere_pro",
+      "name": "Adobe Premiere Pro",
+      "category": "design_tools",
+      "aliases": [
+        "Premiere Pro",
+        "Adobe Premiere",
+        "премьер про"
+      ]
+    },
+    {
+      "id": "davinci_resolve",
+      "name": "DaVinci Resolve",
+      "category": "design_tools",
+      "aliases": [
+        "DaVinci"
+      ]
+    },
+    {
+      "id": "blender",
+      "name": "Blender",
+      "category": "design_tools",
+      "aliases": [
+        "блендер"
+      ]
+    },
+    {
+      "id": "cinema4d",
+      "name": "Cinema 4D",
+      "category": "design_tools",
+      "aliases": [
+        "Cinema4D",
+        "C4D"
+      ]
+    },
+    {
+      "id": "3dsmax",
+      "name": "3ds Max",
+      "category": "design_tools",
+      "aliases": [
+        "3dsMax",
+        "3d max"
+      ]
+    },
+    {
+      "id": "maya",
+      "name": "Autodesk Maya",
+      "category": "design_tools",
+      "aliases": [
+        "Maya"
+      ]
+    },
+    {
+      "id": "zbrush",
+      "name": "ZBrush",
+      "category": "design_tools",
+      "aliases": []
+    },
+    {
+      "id": "sketch",
+      "name": "Sketch",
+      "category": "design_tools",
+      "aliases": []
+    },
+    {
+      "id": "coreldraw",
+      "name": "CorelDRAW",
+      "category": "design_tools",
+      "aliases": [
+        "Corel Draw",
+        "корел"
+      ]
+    },
+    {
+      "id": "canva",
+      "name": "Canva",
+      "category": "design_tools",
+      "aliases": []
+    },
+    {
+      "id": "procreate",
+      "name": "Procreate",
+      "category": "design_tools",
+      "aliases": []
+    },
+    {
+      "id": "autocad",
+      "name": "AutoCAD",
+      "category": "design_tools",
+      "aliases": []
+    },
+    {
+      "id": "revit",
+      "name": "Revit",
+      "category": "design_tools",
+      "aliases": []
+    },
+    {
+      "id": "unreal",
+      "name": "Unreal Engine",
+      "category": "design_tools",
+      "aliases": [
+        "UE4",
+        "UE5"
+      ]
+    },
+    {
+      "id": "unity",
+      "name": "Unity",
+      "category": "design_tools",
+      "aliases": []
+    },
+    {
+      "id": "houdini",
+      "name": "Houdini",
+      "category": "design_tools",
+      "aliases": []
+    },
+    {
+      "id": "substance_painter",
+      "name": "Substance Painter",
+      "category": "design_tools",
+      "aliases": []
+    },
+    {
+      "id": "animate",
+      "name": "Adobe Animate",
+      "category": "design_tools",
+      "aliases": []
+    },
+    {
+      "id": "capcut",
+      "name": "CapCut",
+      "category": "design_tools",
+      "aliases": []
+    },
+    {
+      "id": "tilda",
+      "name": "Tilda",
+      "category": "design_tools",
+      "aliases": [
+        "тильда"
+      ]
+    },
+    {
+      "id": "webflow",
+      "name": "Webflow",
+      "category": "design_tools",
+      "aliases": []
+    },
+    {
+      "id": "typography",
+      "name": "Типографика",
+      "category": "design_competencies",
+      "aliases": [
+        "типографика"
+      ]
+    },
+    {
+      "id": "composition",
+      "name": "Композиция",
+      "category": "design_competencies",
+      "aliases": [
+        "основы композиции"
+      ]
+    },
+    {
+      "id": "color_theory",
+      "name": "Колористика",
+      "category": "design_competencies",
+      "aliases": [
+        "теория цвета",
+        "цветоведение"
+      ]
+    },
+    {
+      "id": "prototyping",
+      "name": "Прототипирование",
+      "category": "design_competencies",
+      "aliases": [
+        "создание прототипов"
+      ]
+    },
+    {
+      "id": "ui_design",
+      "name": "UI-дизайн",
+      "category": "design_competencies",
+      "aliases": [
+        "UI design",
+        "дизайн интерфейсов",
+        "UI дизайн"
+      ]
+    },
+    {
+      "id": "ux_research",
+      "name": "UX-исследования",
+      "category": "design_competencies",
+      "aliases": [
+        "UX research",
+        "пользовательские исследования",
+        "UX исследования"
+      ]
+    },
+    {
+      "id": "ux_design",
+      "name": "UX-дизайн",
+      "category": "design_competencies",
+      "aliases": [
+        "UX design",
+        "UX дизайн"
+      ]
+    },
+    {
+      "id": "motion_design",
+      "name": "Моушн-дизайн",
+      "category": "design_competencies",
+      "aliases": [
+        "motion design",
+        "моушен дизайн",
+        "моушн дизайн"
+      ]
+    },
+    {
+      "id": "graphic_design",
+      "name": "Графический дизайн",
+      "category": "design_competencies",
+      "aliases": []
+    },
+    {
+      "id": "web_design",
+      "name": "Веб-дизайн",
+      "category": "design_competencies",
+      "aliases": [
+        "веб дизайн",
+        "web design"
+      ]
+    },
+    {
+      "id": "3d_modeling",
+      "name": "3D-моделирование",
+      "category": "design_competencies",
+      "aliases": [
+        "3D моделирование",
+        "трехмерное моделирование"
+      ]
+    },
+    {
+      "id": "video_editing",
+      "name": "Видеомонтаж",
+      "category": "design_competencies",
+      "aliases": [
+        "монтаж видео"
+      ]
+    },
+    {
+      "id": "color_grading",
+      "name": "Цветокоррекция",
+      "category": "design_competencies",
+      "aliases": []
+    },
+    {
+      "id": "retouching",
+      "name": "Ретушь",
+      "category": "design_competencies",
+      "aliases": [
+        "ретуширование"
+      ]
+    },
+    {
+      "id": "illustration",
+      "name": "Иллюстрация",
+      "category": "design_competencies",
+      "aliases": [
+        "рисование иллюстраций"
+      ]
+    },
+    {
+      "id": "design_systems",
+      "name": "Дизайн-системы",
+      "category": "design_competencies",
+      "aliases": [
+        "дизайн системы",
+        "design systems"
+      ]
+    },
+    {
+      "id": "branding",
+      "name": "Брендинг",
+      "category": "design_competencies",
+      "aliases": []
+    },
+    {
+      "id": "layout",
+      "name": "Верстка",
+      "category": "design_competencies",
+      "aliases": [
+        "вёрстка"
+      ]
+    },
+    {
+      "id": "prepress",
+      "name": "Допечатная подготовка",
+      "category": "design_competencies",
+      "aliases": [
+        "prepress"
+      ]
+    },
+    {
+      "id": "storyboarding",
+      "name": "Раскадровка",
+      "category": "design_competencies",
+      "aliases": [
+        "storyboarding"
+      ]
+    },
+    {
+      "id": "animation",
+      "name": "Анимация",
+      "category": "design_competencies",
+      "aliases": []
+    },
+    {
+      "id": "copywriting",
+      "name": "Копирайтинг",
+      "category": "marketing_content",
+      "aliases": [
+        "копирайт"
+      ]
+    },
+    {
+      "id": "editing",
+      "name": "Редактура",
+      "category": "marketing_content",
+      "aliases": [
+        "редактирование текстов"
+      ]
+    },
+    {
+      "id": "proofreading",
+      "name": "Корректура",
+      "category": "marketing_content",
+      "aliases": [
+        "корректура текстов"
+      ]
+    },
+    {
+      "id": "literacy",
+      "name": "Грамотность",
+      "category": "marketing_content",
+      "aliases": [
+        "грамотный русский язык"
+      ]
+    },
+    {
+      "id": "seo",
+      "name": "SEO",
+      "category": "marketing_content",
+      "aliases": [
+        "поисковая оптимизация",
+        "сео"
+      ]
+    },
+    {
+      "id": "smm",
+      "name": "SMM",
+      "category": "marketing_content",
+      "aliases": [
+        "смм"
+      ]
+    },
+    {
+      "id": "target_ads",
+      "name": "Таргетированная реклама",
+      "category": "marketing_content",
+      "aliases": [
+        "таргетинг"
+      ]
+    },
+    {
+      "id": "context_ads",
+      "name": "Контекстная реклама",
+      "category": "marketing_content",
+      "aliases": []
+    },
+    {
+      "id": "yandex_direct",
+      "name": "Яндекс Директ",
+      "category": "marketing_content",
+      "aliases": [
+        "Яндекс.Директ"
+      ]
+    },
+    {
+      "id": "vk_ads",
+      "name": "VK Реклама",
+      "category": "marketing_content",
+      "aliases": [
+        "VK Ads",
+        "ВК реклама"
+      ]
+    },
+    {
+      "id": "google_ads",
+      "name": "Google Ads",
+      "category": "marketing_content",
+      "aliases": [
+        "Google AdWords"
+      ]
+    },
+    {
+      "id": "mytarget",
+      "name": "myTarget",
+      "category": "marketing_content",
+      "aliases": []
+    },
+    {
+      "id": "yandex_metrica",
+      "name": "Яндекс Метрика",
+      "category": "marketing_content",
+      "aliases": [
+        "Яндекс.Метрика",
+        "Yandex Metrica"
+      ]
+    },
+    {
+      "id": "google_analytics",
+      "name": "Google Analytics",
+      "category": "marketing_content",
+      "aliases": [
+        "GA4"
+      ]
+    },
+    {
+      "id": "email_marketing",
+      "name": "Email-маркетинг",
+      "category": "marketing_content",
+      "aliases": [
+        "email marketing",
+        "email маркетинг"
+      ]
+    },
+    {
+      "id": "content_strategy",
+      "name": "Контент-стратегия",
+      "category": "marketing_content",
+      "aliases": [
+        "контент стратегия"
+      ]
+    },
+    {
+      "id": "content_plan",
+      "name": "Контент-планирование",
+      "category": "marketing_content",
+      "aliases": [
+        "контент планирование",
+        "создание контент плана",
+        "составление контент плана"
+      ]
+    },
+    {
+      "id": "ab_testing",
+      "name": "A/B-тестирование",
+      "category": "marketing_content",
+      "aliases": [
+        "A/B тестирование",
+        "AB testing",
+        "AB-тестирование"
+      ]
+    },
+    {
+      "id": "custdev",
+      "name": "Customer Development",
+      "category": "marketing_content",
+      "aliases": [
+        "CustDev",
+        "кастдев"
+      ]
+    },
+    {
+      "id": "cjm",
+      "name": "Customer Journey Map",
+      "category": "marketing_content",
+      "aliases": [
+        "CJM"
+      ]
+    },
+    {
+      "id": "media_planning",
+      "name": "Медиапланирование",
+      "category": "marketing_content",
+      "aliases": []
+    },
+    {
+      "id": "web_analytics",
+      "name": "Веб-аналитика",
+      "category": "marketing_content",
+      "aliases": [
+        "веб аналитика"
+      ]
+    },
+    {
+      "id": "storytelling",
+      "name": "Сторителлинг",
+      "category": "marketing_content",
+      "aliases": [
+        "storytelling"
+      ]
+    },
+    {
+      "id": "pr",
+      "name": "Public Relations",
+      "category": "marketing_content",
+      "aliases": [
+        "PR",
+        "пиар"
+      ]
+    },
+    {
+      "id": "python",
+      "name": "Python",
+      "category": "programming_data",
+      "aliases": [
+        "питон",
+        "пайтон"
+      ]
+    },
+    {
+      "id": "sql",
+      "name": "SQL",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "excel",
+      "name": "Microsoft Excel",
+      "category": "programming_data",
+      "aliases": [
+        "Excel",
+        "эксель"
+      ]
+    },
+    {
+      "id": "google_sheets",
+      "name": "Google Sheets",
+      "category": "programming_data",
+      "aliases": [
+        "Google Таблицы",
+        "Гугл таблицы"
+      ]
+    },
+    {
+      "id": "power_bi",
+      "name": "Power BI",
+      "category": "programming_data",
+      "aliases": [
+        "PowerBI"
+      ]
+    },
+    {
+      "id": "tableau",
+      "name": "Tableau",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "powerpoint",
+      "name": "Microsoft PowerPoint",
+      "category": "programming_data",
+      "aliases": [
+        "PowerPoint",
+        "Power Point"
+      ]
+    },
+    {
+      "id": "word",
+      "name": "Microsoft Word",
+      "category": "programming_data",
+      "aliases": [
+        "MS Word"
+      ]
+    },
+    {
+      "id": "ms_office",
+      "name": "Microsoft Office",
+      "category": "programming_data",
+      "aliases": [
+        "MS Office"
+      ]
+    },
+    {
+      "id": "html",
+      "name": "HTML",
+      "category": "programming_data",
+      "aliases": [
+        "HTML5"
+      ]
+    },
+    {
+      "id": "css",
+      "name": "CSS",
+      "category": "programming_data",
+      "aliases": [
+        "CSS3"
+      ]
+    },
+    {
+      "id": "javascript",
+      "name": "JavaScript",
+      "category": "programming_data",
+      "aliases": [
+        "JS"
+      ]
+    },
+    {
+      "id": "typescript",
+      "name": "TypeScript",
+      "category": "programming_data",
+      "aliases": [
+        "TS"
+      ]
+    },
+    {
+      "id": "react",
+      "name": "React",
+      "category": "programming_data",
+      "aliases": [
+        "React.js",
+        "ReactJS"
+      ]
+    },
+    {
+      "id": "vue",
+      "name": "Vue",
+      "category": "programming_data",
+      "aliases": [
+        "Vue.js",
+        "VueJS"
+      ]
+    },
+    {
+      "id": "nodejs",
+      "name": "Node.js",
+      "category": "programming_data",
+      "aliases": [
+        "NodeJS"
+      ]
+    },
+    {
+      "id": "php",
+      "name": "PHP",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "mysql",
+      "name": "MySQL",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "postgres",
+      "name": "PostgreSQL",
+      "category": "programming_data",
+      "aliases": [
+        "Postgres"
+      ]
+    },
+    {
+      "id": "git",
+      "name": "Git",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "docker",
+      "name": "Docker",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "linux",
+      "name": "Linux",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "cpp",
+      "name": "C++",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "csharp",
+      "name": "C#",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "dotnet",
+      "name": ".NET",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "java",
+      "name": "Java",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "r_language",
+      "name": "R язык",
+      "category": "programming_data",
+      "aliases": [
+        "язык R"
+      ]
+    },
+    {
+      "id": "pandas",
+      "name": "pandas",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "numpy",
+      "name": "NumPy",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "pytorch",
+      "name": "PyTorch",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "tensorflow",
+      "name": "TensorFlow",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "api",
+      "name": "API",
+      "category": "programming_data",
+      "aliases": [
+        "REST API"
+      ]
+    },
+    {
+      "id": "wordpress",
+      "name": "WordPress",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "bitrix_cms",
+      "name": "1С-Битрикс",
+      "category": "programming_data",
+      "aliases": [
+        "1C-Битрикс",
+        "Битрикс CMS"
+      ]
+    },
+    {
+      "id": "modx",
+      "name": "MODX",
+      "category": "programming_data",
+      "aliases": []
+    },
+    {
+      "id": "bitrix24",
+      "name": "Битрикс24",
+      "category": "programming_data",
+      "aliases": [
+        "Bitrix24",
+        "Битрикс 24"
+      ]
+    },
+    {
+      "id": "amocrm",
+      "name": "amoCRM",
+      "category": "programming_data",
+      "aliases": [
+        "амо срм"
+      ]
+    },
+    {
+      "id": "jira",
+      "name": "Jira",
+      "category": "workflow_languages",
+      "aliases": []
+    },
+    {
+      "id": "confluence",
+      "name": "Confluence",
+      "category": "workflow_languages",
+      "aliases": []
+    },
+    {
+      "id": "notion",
+      "name": "Notion",
+      "category": "workflow_languages",
+      "aliases": []
+    },
+    {
+      "id": "miro",
+      "name": "Miro",
+      "category": "workflow_languages",
+      "aliases": []
+    },
+    {
+      "id": "trello",
+      "name": "Trello",
+      "category": "workflow_languages",
+      "aliases": []
+    },
+    {
+      "id": "agile",
+      "name": "Agile",
+      "category": "workflow_languages",
+      "aliases": []
+    },
+    {
+      "id": "scrum",
+      "name": "Scrum",
+      "category": "workflow_languages",
+      "aliases": []
+    },
+    {
+      "id": "kanban",
+      "name": "Kanban",
+      "category": "workflow_languages",
+      "aliases": [
+        "канбан"
+      ]
+    },
+    {
+      "id": "project_management",
+      "name": "Управление проектами",
+      "category": "workflow_languages",
+      "aliases": [
+        "проектное управление",
+        "project management"
+      ]
+    },
+    {
+      "id": "negotiation",
+      "name": "Ведение переговоров",
+      "category": "workflow_languages",
+      "aliases": [
+        "переговорные навыки"
+      ]
+    },
+    {
+      "id": "time_management",
+      "name": "Тайм-менеджмент",
+      "category": "workflow_languages",
+      "aliases": [
+        "тайм менеджмент",
+        "time management"
+      ]
+    },
+    {
+      "id": "teamwork",
+      "name": "Работа в команде",
+      "category": "workflow_languages",
+      "aliases": [
+        "командная работа"
+      ]
+    },
+    {
+      "id": "presentation",
+      "name": "Публичные выступления",
+      "category": "workflow_languages",
+      "aliases": []
+    },
+    {
+      "id": "english",
+      "name": "Английский язык",
+      "category": "workflow_languages",
+      "aliases": [
+        "английский",
+        "English"
+      ]
+    },
+    {
+      "id": "german",
+      "name": "Немецкий язык",
+      "category": "workflow_languages",
+      "aliases": [
+        "немецкий"
+      ]
+    },
+    {
+      "id": "french",
+      "name": "Французский язык",
+      "category": "workflow_languages",
+      "aliases": [
+        "французский"
+      ]
+    },
+    {
+      "id": "chinese",
+      "name": "Китайский язык",
+      "category": "workflow_languages",
+      "aliases": [
+        "китайский"
+      ]
+    },
+    {
+      "id": "midjourney",
+      "name": "Midjourney",
+      "category": "workflow_languages",
+      "aliases": []
+    },
+    {
+      "id": "stable_diffusion",
+      "name": "Stable Diffusion",
+      "category": "workflow_languages",
+      "aliases": []
+    },
+    {
+      "id": "chatgpt",
+      "name": "ChatGPT",
+      "category": "workflow_languages",
+      "aliases": []
+    }
+  ]
+}

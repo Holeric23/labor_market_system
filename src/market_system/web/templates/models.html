@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% block title %}Модели и эксперименты{% endblock %}{% block content %}
+<h1>Модели и эксперименты</h1>
+<p>Назначение модели создаёт задание полной пересборки. Рабочая выдача меняется отдельной активацией проверенного ready-набора. Обучение при запуске приложения не выполняется.</p>
+<table><thead><tr><th>Модель</th><th>Статус</th><th>Область оценки</th></tr></thead><tbody>{% for m in models %}<tr><td><a href="/models/{{ m.model_version|urlencode }}">{{ m.model_version }}</a></td><td>{{ m.status }}</td><td>{{ m.evaluation_scope }}</td></tr>{% endfor %}</tbody></table>
+<h2>Наборы результатов</h2><p>Прежние ready-наборы сохраняются. Для отката активируйте нужную прежнюю версию; актуальные подтверждённые исправления будут сохранены.</p>
+<table><thead><tr><th>Набор / модель</th><th>Состояние</th><th>Переключение</th></tr></thead><tbody>{% for r in results %}<tr><td>{{ r.result_set_id }}<br>{{ r.model_version }}</td><td>{{ r.state }}{% if r.is_active %} · рабочий{% endif %}{% if r.job_state %} · задание {{ r.job_state }}{% endif %}{% if r.job_error %}<pre>{{ r.job_error }}</pre>{% endif %}</td><td>{% if r.state=='ready' and not r.is_active %}<form method="post" action="/models/results/{{ r.result_set_id|urlencode }}/activate"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button>Активировать / откатить</button></form>{% endif %}</td></tr>{% endfor %}</tbody></table>
+<h2>Эксперименты</h2><p>Ноль ошибок validation не гарантирует качество. Повторно исследованный исторический test не является новым независимым аудитом. Test не используется для подбора параметров.</p>
+<p>Новый эксперимент запускается явной локальной командой с ID документов и ограничениями количества и времени.</p>
+<ul>{% for e in experiments %}<li><a href="/experiments/{{ e.experiment_id }}">{{ e.experiment_id }}</a> · {{ e.kind }} · {{ e.state }}{% if e.error %} · {{ e.error }}{% endif %}</li>{% endfor %}</ul>
+{% endblock %}

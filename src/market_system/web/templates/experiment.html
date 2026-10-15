@@ -1,0 +1,4 @@
+{% extends 'base.html' %}{% block content %}<h1>Эксперимент {{ experiment.experiment_id }}</h1>
+<p>{{ experiment.state }} · {{ experiment.kind }}</p><p>Малая/целевая или историческая выборка. Ноль ошибок validation не гарантирует качество. Исторический test повторно исследован, это не новый независимый аудит.</p>
+<a href="/experiments/{{ experiment.experiment_id }}/export">Скачать параметры, метрики, ошибки и происхождение JSON</a>
+{% if truncated %}<p>Просмотр ограничен 50 000 символами; полные сохранённые данные доступны в выгрузке.</p>{% endif %}<pre>{{ details }}</pre>{% endblock %}

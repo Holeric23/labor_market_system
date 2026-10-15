@@ -1,0 +1,7 @@
+{% extends 'base.html' %}{% block title %}Проверка документов{% endblock %}{% block content %}
+<h1>Проверка документов</h1>
+<nav>{% for key,title in [('audit','Случайный аудит'),('uncertain','Неуверенный тип'),('ambiguous','Неоднозначные поля'),('terms','Новые термины'),('multiple','Несколько предложений')] %}<a href="/review?reason={{ key }}">{{ title }}</a> {% endfor %}</nav>
+<p>Показаны первые 100 документов выбранной очереди. Проверка не включает документ в обучение.</p>
+<form method="post" action="/review/audit"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button>Добавить 20 случайных документов в аудит</button></form>
+{% for row in rows %}<article class="panel"><a href="/review/{{ row.id }}">Документ №{{ row.id }}</a><p>{{ row.preview }}</p><p>{{ row.post_type|label }} · ревизия {{ row.revision or 0 }}</p></article>{% else %}<p>В этой очереди документов нет.</p>{% endfor %}
+{% endblock %}

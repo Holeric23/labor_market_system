@@ -1,0 +1,4 @@
+{% extends 'base.html' %}{% block content %}<h1>{{ model.model_version }}</h1><p>{{ model.status }} · {{ model.adapter }} · {{ model.evaluation_scope }}</p>
+{% for action,text in [('approve','Одобрить'),('designate','Назначить и поставить полную пересборку в очередь'),('retire','Вывести из использования')] %}<form method="post" action="/models/{{ model.model_version|urlencode }}/{{ action }}"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button>{{ text }}</button></form>{% endfor %}
+<h2>Артефакты, параметры и контрольные суммы</h2><pre>{{ manifest|pretty }}</pre><h2>Зависимости</h2><pre>{{ dependencies|pretty }}</pre>
+<h2>Пространство определений</h2><p>Изменение смысла, разделение или слияние классов требует новых определений и версии. Названия не определяют соответствия подписок.</p><pre>{{ classes|pretty }}</pre>{% endblock %}

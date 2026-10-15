@@ -1,0 +1,8 @@
+{% extends 'base.html' %}{% block title %}Диагностика{% endblock %}{% block content %}
+<h1>Диагностика системы</h1>
+<p>Быстрая проверка миграций, активного каталога, очередей и источников. Проверка всей базы здесь не запускается. Для проверки целостности используйте diagnose, для проверки файлов модели и покрытия — diagnose --full.</p>
+<p>Итог: {% if diagnostics.ok %}быстрая проверка пройдена{% else %}требуется вмешательство админа{% endif %}.</p>
+{% for error in diagnostics.errors %}<p role="alert">{{ error }}</p>{% endfor %}
+{% for warning in diagnostics.warnings %}<p>{{ warning }}</p>{% endfor %}
+<pre>{{ diagnostics|pretty }}</pre>
+{% endblock %}

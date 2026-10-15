@@ -1,0 +1,18 @@
+{
+  "pyproject.toml": "2876501175b4c3b69ae1d5ca555d2e5126374fc073a83402bceabf57e3c30458",
+  "README.md": "df59a9fc7a655565f0dc89fe476058fe408375c2f95e5d2d65c137dda2282add",
+  "docs/CONTRACTS.md": "f532ca684aaf157fb66f7de2650b72f179ff696c3ee8dbe6b1c4533acf0096ba",
+  "docs/IMPLEMENTATION_STATE.md": "ad3b32b28b2bceb996ddc2c58ea53783c905354fe559961ad0bd952f4eca6809",
+  "scripts/check_stage9.py": "978fdc2b5639834423e20cbbbeb83bfc184d29d7653b648d10888e145b7267f8",
+  "tests/test_analytics.py": "5ed69a9e17b97b7db56cd762bb6ae82b4280fd34749ab4d6edb9420d108a39a1",
+  "src/market_system/web/app.py": "13ad3175e1c0889d96fda3e078dc51fe708af4223523310976b82470de8d9479",
+  "src/market_system/web/templates/base.html": "cc6c1b891c26da74cf80bb02c22826474d0df383b9288864ae80d188b63c0188",
+  "src/market_system/web/templates/analytics.html": "f5ead88dd973a6d5cccf2601199d5c32aeb1737f3a024265820c48fabe256ce3",
+  "src/market_system/web/templates/analytics_documents.html": "dcaea4ae8ac944b9b7a154f939fddde743100d462fcb56e7b3f8620575c97a17",
+  "src/market_system/web/templates/analytics_document.html": "deb5a7f160dde3d865918573b53e670def76d2f931737126c6e65e5fe8c6f9b1",
+  "src/market_system/web/static/style.css": "246c2e1fe14cc672463e205f998becf458ed1fedb49b42b7d18fc49c0ac4442f",
+  "src/market_system/analytics/__init__.py": "38e23821d12736d297c1ab02b43127791a812caadde2f40ea3241455d204a0b5",
+  "src/market_system/analytics/007_analytics.sql": "740581b7eb91370113bd39c97126e0ac683307b30a38cb8f080942ac18a19511",
+  "src/market_system/analytics/engine_v1.py": "b2032ad9b933316f7664e576e29b4eabe81f1d178628f9da75c922a4eb48242f",
+  "src/market_system/analytics/store.py": "4f5c7ff62df17b485aa0fb5a26afd77d6f72e90a28da151cb62e75896613116d"
+}

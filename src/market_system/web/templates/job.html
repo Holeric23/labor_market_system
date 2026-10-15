@@ -1,0 +1,12 @@
+{% extends 'base.html' %}{% block title %}Задание{% endblock %}{% block content %}
+<h1>Задание {{ job.job_id }}</h1><a href="/jobs">Все задания</a>
+<p>Тип: {{ job.kind }} · Состояние: {{ job.state }} · {{ job.progress }} / {{ job.total }}</p>
+<progress value="{{ job.progress }}" max="{{ job.total or 1 }}"></progress>
+<p>Создано: {{ job.created_at }} · Обновлено: {{ job.updated_at }} · Завершено: {{ job.finished_at or '—' }}</p>
+<p>Попыток: {{ job.attempts }} · Контрольная позиция: {{ job.checkpoint }} · Исполнитель: {{ job.owner or '—' }}</p>
+<p>Набор: {{ job.result_set_id }} · Отмена запрошена: {{ 'да' if job.cancel_requested else 'нет' }}</p>
+{% if job.error %}<pre role="alert">{{ job.error }}</pre>{% endif %}
+{% if job.state in ('failed','cancelled') %}<form method="post" action="/jobs/{{ job.job_id }}/retry"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button>Повторить с контрольной позиции</button></form>{% endif %}
+{% if job.state in ('queued','running','failed') %}<form method="post" action="/jobs/{{ job.job_id }}/cancel"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button>Отменить между пакетами</button></form>{% endif %}
+<details><summary>Параметры</summary><pre>{{ job.parameters_json }}</pre></details>
+{% endblock %}
