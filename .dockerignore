@@ -1,0 +1,15 @@
+.git
+.venv
+.artifacts
+__pycache__
+**/__pycache__
+*.pyc
+.env
+.env.*
+*.session*
+state
+data
+parsers/models
+logs
+backups
+tests

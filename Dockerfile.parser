@@ -1,0 +1,13 @@
+FROM python:3.12-slim-bookworm
+WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONIOENCODING=utf-8 APP_HOME=/app PYTHONPATH=/app:/app/parsers
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && rm -rf /var/lib/apt/lists/*
+COPY requirements-parser.txt ./
+RUN python -m pip install --no-cache-dir -r requirements-parser.txt && python -m pip check
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers
+RUN python -m playwright install --with-deps chromium
+COPY database/ database/
+COPY parsers/ parsers/
+USER 10001:10001
+ENTRYPOINT ["python", "-m", "parsers"]
+CMD ["--due"]

@@ -1,0 +1,5 @@
+{% extends 'base.html' %}{% block title %}Менеджеры{% endblock %}{% block content %}
+<h1>Менеджеры</h1><section class="panel"><p>Разрешение на выдачу одноразовых ссылок через бота привязано к Telegram ID менеджера.</p>
+{% for m in managers %}<p>{{ m.telegram_id }} — {% if m.active %}доступ разрешён{% else %}доступ отозван{% endif %}</p>{% endfor %}
+<form method="post" action="/team"><input type="hidden" name="csrf" value="{{ session.csrf }}"><label>Telegram ID<input type="number" min="1" name="telegram_id" required></label>
+<button name="action" value="enable">Разрешить выдачу</button> <button name="action" value="disable">Отозвать право</button></form></section>{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% block title %}Бот и документы{% endblock %}{% block content %}
+<h1>Бот и документы</h1>
+<section class="panel"><h2>Настройки бота</h2>
+<form method="post" action="/product"><input type="hidden" name="csrf" value="{{ session.csrf }}">
+<label>Вакансий в подборке<input type="number" name="selection_limit" min="1" max="20" value="{{ settings.selection_limit }}" required></label>
+<label>Стоимость доступа<textarea name="pricing_text" maxlength="2000" rows="4">{{ settings.pricing_text or '' }}</textarea></label>
+<label>Другие услуги ПРОЩЕ<textarea name="services_text" maxlength="2000" rows="4">{{ settings.services_text or '' }}</textarea></label>
+<label>Ссылка на другие услуги<input type="url" name="services_url" value="{{ settings.services_url or '' }}"></label>
+<button>Сохранить настройки</button></form></section>
+<section class="panel"><h2>Документы</h2>
+<p>Добавьте ссылку и полный утверждённый текст каждой редакции. Условия, политика и согласие нужны до начала поиска. Тексты сохраняются с номером версии.</p>
+<ul>{% for d in documents %}<li>{{ labels[d.kind] }} — версия {{ d.version }}: <a href="{{ d.url }}" rel="noopener noreferrer">Открыть</a></li>{% endfor %}</ul>
+<form method="post" action="/product/documents"><input type="hidden" name="csrf" value="{{ session.csrf }}">
+<label>Документ<select name="kind">{% for key,label in labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
+<label>Версия<input name="version" maxlength="80" required></label><label>Постоянная ссылка<input type="url" name="url" required></label>
+<label>Полный текст редакции<textarea name="body" rows="8" maxlength="200000" required></textarea></label><button>Опубликовать редакцию</button></form></section>
+{% endblock %}
