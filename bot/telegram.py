@@ -2,14 +2,15 @@
 import asyncio
 import uuid
 
-from aiogram import F, Router
+from aiogram import F, Router, BaseMiddleware
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from aiogram.filters import Command
 from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo,
-                           InlineQueryResultArticle, InputTextMessageContent)
+                           InlineQueryResultArticle, InputTextMessageContent, Message, CallbackQuery, InlineQuery)
 from database.client import ClientRepository, DOCUMENT_LABELS, REQUIRED
 from database.repository import Repository
 from database.search import normalize
+from bot.ui_messages import UIMessageManager
 
 
 def keyboard(rows):
@@ -31,9 +32,44 @@ def home_keyboard():
                      [button('Документы и помощь','documents')]])
 
 
+UNAVAILABLE = 'Извините, бот сейчас недоступен. Пожалуйста, попробуйте позже.'
+
+
+class AvailabilityMiddleware(BaseMiddleware):
+    def __init__(self, repository, owner_ids, ui):
+        self.repository = repository
+        self.owner_ids = owner_ids
+        self.ui = ui
+
+    async def __call__(self, handler, event, data):
+        if isinstance(event, Message) and event.from_user and event.chat.type == 'private':
+            command = (event.text or '').split(maxsplit=1)
+            if event.chat.id == event.from_user.id and event.from_user.id in self.owner_ids and command and command[0].split('@')[0] == '/admin':
+                return await handler(event, data)
+        try:
+            available = await asyncio.to_thread(self.repository.bot_available)
+        except Exception:
+            available = False
+        if available:
+            return await handler(event, data)
+        if isinstance(event, CallbackQuery):
+            await event.answer(UNAVAILABLE, show_alert=True)
+        elif isinstance(event, InlineQuery):
+            await event.answer([], cache_time=0, is_personal=True)
+        elif isinstance(event, Message) and event.from_user and event.chat.type == 'private' and event.chat.id == event.from_user.id:
+            await self.ui.menu(event,UNAVAILABLE)
+
+
 def make_router(settings):
     router = Router(name='product')
     repository, clients = Repository(), ClientRepository()
+    ui = UIMessageManager()
+    availability = AvailabilityMiddleware(repository, settings.owner_ids, ui)
+    router.message.outer_middleware(ui)
+    router.callback_query.outer_middleware(ui)
+    router.message.outer_middleware(availability)
+    router.callback_query.outer_middleware(availability)
+    router.inline_query.outer_middleware(availability)
 
     async def run(method, *args, **kwargs):
         return await asyncio.to_thread(method, *args, **kwargs)
@@ -48,7 +84,7 @@ def make_router(settings):
         return keyboard(rows)
 
     async def home(message):
-        await message.answer('Привет, это ПРОЩЕ. Помогу найти вакансии по твоему направлению. Первые три подборки бесплатные.', reply_markup=home_keyboard())
+        await ui.menu(message,'Привет, это ПРОЩЕ. Помогу найти вакансии по твоему направлению. Первые три подборки бесплатные.', reply_markup=home_keyboard())
 
     async def documents(message, user):
         docs = {item['kind']:item for item in await run(clients.documents,user)}
@@ -72,7 +108,7 @@ def make_router(settings):
         if config['manager_url']:
             rows.append([link('Связаться с поддержкой',config['manager_url'])])
         rows.append([button('Главное меню','home')])
-        await message.answer(text,reply_markup=keyboard(rows))
+        await ui.menu(message,text,reply_markup=keyboard(rows))
 
     async def require_ready(message, user):
         try:
@@ -80,7 +116,7 @@ def make_router(settings):
             return True
         except PermissionError as exc:
             if 'ограничен' in str(exc):
-                await message.answer(str(exc),reply_markup=await contact_keyboard())
+                await ui.menu(message,str(exc),reply_markup=await contact_keyboard())
             else:
                 await documents(message,user)
         except ValueError:
@@ -106,13 +142,13 @@ def make_router(settings):
             rows.append([button('Обновить выбранный фильтр','filter:update')])
             rows.append([button('Удалить этот фильтр',f"filter:delete:{state['editing_filter_id'].hex}")])
         rows.extend([[button('Мои фильтры','filters')],[button('Главное меню','home')]])
-        await message.answer(text,reply_markup=keyboard(rows))
+        await ui.menu(message,text,reply_markup=keyboard(rows))
 
     async def filter_list(message, user):
         rows = await run(clients.filters,user)
         buttons = [[button(row['name'],f"filter:select:{row['id'].hex}")] for row in rows]
         buttons.extend([[button('Создать фильтр','filter:new')],[button('Изменить текущий','filter:edit')],[button('Главное меню','home')]])
-        await message.answer('Мои фильтры. Выберите сохранённый фильтр или создайте новый.' if rows else 'Сохранённых фильтров пока нет.',reply_markup=keyboard(buttons))
+        await ui.menu(message,'Мои фильтры. Выберите сохранённый фильтр или создайте новый.' if rows else 'Сохранённых фильтров пока нет.',reply_markup=keyboard(buttons))
 
     async def wizard(message, user, step):
         await run(clients.wizard_step,user,step)
@@ -135,7 +171,7 @@ def make_router(settings):
         if step > 0:
             rows.append([button('Назад',f'wizard:{step-1}')])
         rows.append([button('Отмена','wizard:cancel')])
-        await message.answer(text,reply_markup=keyboard(rows))
+        await ui.menu(message,text,reply_markup=keyboard(rows))
 
     async def access(message, user):
         value = await run(clients.status,user,user in settings.owner_ids)
@@ -154,7 +190,7 @@ def make_router(settings):
         if config['manager_url']:
             rows.append([link('Связаться с менеджером',config['manager_url'])])
         rows.extend([[button('Документы','documents')],[button('Главное меню','home')]])
-        await message.answer(description,reply_markup=keyboard(rows))
+        await ui.menu(message,description,reply_markup=keyboard(rows))
 
     async def card(message, user, identity, ordinal):
         item = await run(clients.item,user,identity,ordinal)
@@ -171,7 +207,7 @@ def make_router(settings):
         rows.append([button('Не подходит',f'reason:{key}:{ordinal}'),button('Уже откликнулся',f'mark:applied:{key}:{ordinal}')])
         rows.append([button('К подборке',f'selection:{key}'),button('Сохранённое','saved')])
         rows.append([button('Главное меню','home')])
-        await message.answer(text,reply_markup=keyboard(rows),parse_mode=None)
+        await ui.delivery(message,text,reply_markup=keyboard(rows),parse_mode=None)
 
     async def search(message, user):
         try:
@@ -180,11 +216,11 @@ def make_router(settings):
             await access(message,user)
             return
         if not selection:
-            await message.answer('Новых предложений по этим условиям пока нет. Бесплатная попытка сохранилась.',
+            await ui.menu(message,'Новых предложений по этим условиям пока нет. Бесплатная попытка сохранилась.',
                                  reply_markup=keyboard([[button('Настроить поиск','filter:edit')],[button('Главное меню','home')]]))
             return
         if 'existing_id' in selection:
-            await message.answer('Эта подборка уже выдана.',reply_markup=keyboard([[button('Открыть подборку',f"selection:{selection['existing_id'].hex}")],[button('Главное меню','home')]]))
+            await ui.menu(message,'Эта подборка уже выдана.',reply_markup=keyboard([[button('Открыть подборку',f"selection:{selection['existing_id'].hex}")],[button('Главное меню','home')]]))
             return
         label = f"Пробная подборка {selection['number']} из 3.\n" if selection['trial'] else ''
         lines = []
@@ -201,7 +237,7 @@ def make_router(settings):
         rows.append([button('Найти ещё','search')])
         rows.append([button('Мой доступ','access'),button('Главное меню','home')])
         try:
-            sent = await message.answer(text,reply_markup=keyboard(rows),parse_mode=None)
+            sent = await ui.delivery(message,text,reply_markup=keyboard(rows),parse_mode=None)
         except (TelegramBadRequest,TelegramForbiddenError):
             await run(clients.finish_selection,user,selection['id'],'failed')
             raise
@@ -220,11 +256,11 @@ def make_router(settings):
             try:
                 await run(clients.remember_activation,message.from_user.id,args[1][6:])
                 if await require_ready(message,message.from_user.id):
-                    await message.answer('Доступ готов к активации.',reply_markup=keyboard([[button('Активировать доступ','activate')],[button('Главное меню','home')]]))
+                    await ui.menu(message,'Доступ готов к активации.',reply_markup=keyboard([[button('Активировать доступ','activate')],[button('Главное меню','home')]]))
             except ValueError as exc:
-                await message.answer(str(exc),reply_markup=await contact_keyboard())
+                await ui.menu(message,str(exc),reply_markup=await contact_keyboard())
             return
-        await message.answer('Привет, это ПРОЩЕ. Помогу найти вакансии по твоему направлению. Первые три подборки бесплатные.',
+        await ui.menu(message,'Привет, это ПРОЩЕ. Помогу найти вакансии по твоему направлению. Первые три подборки бесплатные.',
             reply_markup=keyboard([[button('Начать','begin')],[button('Как это работает','how')],[button('Документы и помощь','documents')]]))
 
     @router.inline_query()
@@ -256,9 +292,9 @@ def make_router(settings):
         if not private(message,message.from_user) or message.from_user.id not in settings.owner_ids:
             return
         if not settings.miniapp_url:
-            await message.answer('Админ-панель пока не настроена.')
+            await ui.menu(message,'Админ-панель пока не настроена.')
             return
-        await message.answer('Управление системой:',reply_markup=keyboard([[{'text':'Открыть админ-панель','web_app':WebAppInfo(url=settings.miniapp_url)}]]))
+        await ui.menu(message,'Управление системой:',reply_markup=keyboard([[{'text':'Открыть админ-панель','web_app':WebAppInfo(url=settings.miniapp_url)}]]))
 
     @router.message(Command('allow','deny'))
     async def set_access(message):
@@ -269,9 +305,9 @@ def make_router(settings):
             if len(parts) != 2:
                 raise ValueError('Укажите Telegram ID.')
             await run(repository.allow,message.from_user.id,int(parts[1]),parts[0].split('@')[0] == '/allow')
-            await message.answer('Доступ обновлён.')
+            await ui.menu(message,'Доступ обновлён.')
         except ValueError as exc:
-            await message.answer(str(exc))
+            await ui.menu(message,str(exc))
 
     @router.callback_query()
     async def callback(query):
@@ -285,7 +321,7 @@ def make_router(settings):
             if data == 'home':
                 await home(message); return
             if data == 'how':
-                await message.answer('Настройте поиск и получите три бесплатные подборки. После этого можно подключить платный доступ через менеджера.',
+                await ui.menu(message,'Настройте поиск и получите три бесплатные подборки. После этого можно подключить платный доступ через менеджера.',
                     reply_markup=keyboard([[button('Начать','begin')],[button('Документы и помощь','documents')]])); return
             if data == 'documents':
                 await documents(message,user); return
@@ -306,7 +342,7 @@ def make_router(settings):
                     await run(clients.new_draft,user); await wizard(message,user,0)
             elif data == 'activate':
                 end = await run(clients.redeem_activation,user)
-                await message.answer('Доступ подключён до '+end.strftime('%d.%m.%Y %H:%M UTC')+'.',reply_markup=home_keyboard())
+                await ui.menu(message,'Доступ подключён до '+end.strftime('%d.%m.%Y %H:%M UTC')+'.',reply_markup=home_keyboard())
             elif data == 'filters':
                 await filter_list(message,user)
             elif data == 'filter:new':
@@ -322,21 +358,21 @@ def make_router(settings):
                 await filter_menu(message,user)
             elif data == 'filter:save':
                 await run(clients.save_filter,user)
-                await message.answer('Фильтр сохранён и выбран для поиска.',reply_markup=keyboard([[button('Найти вакансии','search')],[button('Мои фильтры','filters')]]))
+                await ui.menu(message,'Фильтр сохранён и выбран для поиска.',reply_markup=keyboard([[button('Найти вакансии','search')],[button('Мои фильтры','filters')]]))
             elif data == 'filter:update':
                 await run(clients.update_filter,user)
-                await message.answer('Фильтр обновлён.',reply_markup=keyboard([[button('Найти вакансии','search')],[button('Мои фильтры','filters')]]))
+                await ui.menu(message,'Фильтр обновлён.',reply_markup=keyboard([[button('Найти вакансии','search')],[button('Мои фильтры','filters')]]))
             elif data.startswith('filter:select:'):
                 await run(clients.select_filter,user,uuid.UUID(hex=data.split(':')[2]))
-                await message.answer('Фильтр выбран.',reply_markup=keyboard([[button('Найти вакансии','search')],[button('Изменить фильтр','filter:edit')],[button('Мои фильтры','filters')]]))
+                await ui.menu(message,'Фильтр выбран.',reply_markup=keyboard([[button('Найти вакансии','search')],[button('Изменить фильтр','filter:edit')],[button('Мои фильтры','filters')]]))
             elif data.startswith('filter:delete:'):
                 key = uuid.UUID(hex=data.split(':')[2]).hex
-                await message.answer('Удалить этот сохранённый фильтр?',reply_markup=keyboard([[button('Да, удалить',f'filter:confirmdelete:{key}'),button('Назад','filter:edit')]]))
+                await ui.menu(message,'Удалить этот сохранённый фильтр?',reply_markup=keyboard([[button('Да, удалить',f'filter:confirmdelete:{key}'),button('Назад','filter:edit')]]))
             elif data.startswith('filter:confirmdelete:'):
                 await run(clients.delete_filter,user,uuid.UUID(hex=data.split(':')[2]))
-                await message.answer('Фильтр удалён.',reply_markup=keyboard([[button('Мои фильтры','filters')],[button('Главное меню','home')]]))
+                await ui.menu(message,'Фильтр удалён.',reply_markup=keyboard([[button('Мои фильтры','filters')],[button('Главное меню','home')]]))
             elif data == 'edit:format':
-                await message.answer('Выберите формат работы:',reply_markup=keyboard([[button('Удалённо','format:remote'),button('Офис','format:onsite')],[button('Гибрид','format:hybrid'),button('Не важно','format:any')],[button('Назад','filter:edit')]]))
+                await ui.menu(message,'Выберите формат работы:',reply_markup=keyboard([[button('Удалённо','format:remote'),button('Офис','format:onsite')],[button('Гибрид','format:hybrid'),button('Не важно','format:any')],[button('Назад','filter:edit')]]))
             elif data.startswith('format:'):
                 value = data.split(':')[1]
                 if value not in ('remote','onsite','hybrid','any'):
@@ -348,7 +384,7 @@ def make_router(settings):
             elif data == 'salary:settings':
                 state = await run(clients.state,user); draft = normalize(state['draft_filter'])
                 missing = draft['unknown'].get('salary','exclude') == 'include'
-                await message.answer('Настройте сумму, валюту и период. Вакансии без зарплаты: '+('показывать' if missing else 'скрывать')+'.',reply_markup=keyboard([
+                await ui.menu(message,'Настройте сумму, валюту и период. Вакансии без зарплаты: '+('показывать' if missing else 'скрывать')+'.',reply_markup=keyboard([
                     [button('Ввести сумму','edit:salary'),button('Не важно','clear:salary')],
                     [button('₽','currency:RUB'),button('$','currency:USD'),button('€','currency:EUR')],
                     [button('В месяц','period:month'),button('В час','period:hour'),button('В год','period:year')],
@@ -365,7 +401,7 @@ def make_router(settings):
                         raise ValueError('Сначала укажите сумму.')
                     draft['currency' if key == 'currency' else 'salary_period'] = value
                 await run(clients.draft,user,draft)
-                await message.answer('Настройки зарплаты обновлены.',reply_markup=keyboard([[button('Продолжить настройку зарплаты','salary:settings')],[button('К фильтру','filter:edit')]]))
+                await ui.menu(message,'Настройки зарплаты обновлены.',reply_markup=keyboard([[button('Продолжить настройку зарплаты','salary:settings')],[button('К фильтру','filter:edit')]]))
             elif data.startswith('edit:'):
                 kind = data.split(':')[1]
                 if kind not in ('occupation','skill','salary','name'):
@@ -374,7 +410,7 @@ def make_router(settings):
                 await run(clients.draft,user,state['draft_filter'],awaiting=kind)
                 prompt = {'occupation':'Введите название специальности.','skill':'Введите название навыка.','salary':'Введите минимальную зарплату целым числом. Затем можно выбрать валюту и период.','name':'Введите название фильтра.'}[kind]
                 back = f"wizard:{state['wizard_step']}" if state['wizard_step'] is not None else 'filter:edit'
-                await message.answer(prompt,reply_markup=keyboard([[button('Не важно','clear:'+kind),button('Назад',back)]]))
+                await ui.menu(message,prompt,reply_markup=keyboard([[button('Не важно','clear:'+kind),button('Назад',back)]]))
             elif data.startswith('clear:'):
                 kind = data.split(':')[1]; state = await run(clients.state,user); draft = normalize(state['draft_filter'])
                 if kind == 'occupation': draft['occupation_ids'] = []
@@ -403,7 +439,7 @@ def make_router(settings):
                 items = await run(clients.saved,user)
                 rows = [[button(item['text'].splitlines()[0][:60] or 'Вакансия',f"card:{item['selection_id'].hex}:{item['ordinal']}")] for item in items]
                 rows.append([button('Главное меню','home')])
-                await message.answer('Сохранённые вакансии:' if items else 'Пока нет сохранённых вакансий.',reply_markup=keyboard(rows))
+                await ui.menu(message,'Сохранённые вакансии:' if items else 'Пока нет сохранённых вакансий.',reply_markup=keyboard(rows))
             elif data.startswith('card:'):
                 _,key,ordinal = data.split(':'); await card(message,user,uuid.UUID(hex=key),int(ordinal))
             elif data.startswith('selection:'):
@@ -415,24 +451,24 @@ def make_router(settings):
                 choices = [button(str(item['ordinal']),f"card:{key.hex}:{item['ordinal']}") for item in items]
                 rows = [choices[i:i+5] for i in range(0,len(choices),5)]
                 rows.append([button('Главное меню','home')])
-                await message.answer('Ваша подборка:\n\n'+'\n'.join(lines),reply_markup=keyboard(rows))
+                await ui.delivery(message,'Ваша подборка:\n\n'+'\n'.join(lines),reply_markup=keyboard(rows))
             elif data.startswith('reason:'):
                 _,key,ordinal = data.split(':')
-                await message.answer('Почему вакансия не подошла?',reply_markup=keyboard([[button('Специализация',f'hide:{key}:{ordinal}:specialty'),button('Оплата',f'hide:{key}:{ordinal}:salary')],[button('Опыт',f'hide:{key}:{ordinal}:experience'),button('Формат',f'hide:{key}:{ordinal}:format')],[button('Другое',f'hide:{key}:{ordinal}:other')],[button('Назад',f'card:{key}:{ordinal}')]]))
+                await ui.menu(message,'Почему вакансия не подошла?',reply_markup=keyboard([[button('Специализация',f'hide:{key}:{ordinal}:specialty'),button('Оплата',f'hide:{key}:{ordinal}:salary')],[button('Опыт',f'hide:{key}:{ordinal}:experience'),button('Формат',f'hide:{key}:{ordinal}:format')],[button('Другое',f'hide:{key}:{ordinal}:other')],[button('Назад',f'card:{key}:{ordinal}')]]))
             elif data.startswith('hide:'):
                 _,key,ordinal,reason = data.split(':'); await run(clients.mark,user,uuid.UUID(hex=key),int(ordinal),'hide',reason)
-                await message.answer('Вакансия скрыта. Можно изменить фильтр для следующих подборок.',reply_markup=keyboard([[button('Изменить фильтр','filter:edit')],[button('Главное меню','home')]]))
+                await ui.menu(message,'Вакансия скрыта. Можно изменить фильтр для следующих подборок.',reply_markup=keyboard([[button('Изменить фильтр','filter:edit')],[button('Главное меню','home')]]))
             elif data.startswith('mark:'):
                 _,action,key,ordinal = data.split(':'); identity=uuid.UUID(hex=key)
                 await run(clients.mark,user,identity,int(ordinal),action)
                 text = {'save':'Вакансия сохранена.','unsave':'Вакансия убрана из сохранённого.','applied':'Отметили, что вы откликнулись.'}[action]
                 rows = [[button('К вакансии',f'card:{key}:{ordinal}')]]
                 rows.append([button('Главное меню','home')])
-                await message.answer(text,reply_markup=keyboard(rows))
+                await ui.menu(message,text,reply_markup=keyboard(rows))
             else:
                 await home(message)
         except (ValueError,PermissionError,KeyError,TypeError,OverflowError) as exc:
-            await message.answer(str(exc) or 'Не удалось выполнить действие.',reply_markup=keyboard([[button('Главное меню','home')]]))
+            await ui.menu(message,str(exc) or 'Не удалось выполнить действие.',reply_markup=keyboard([[button('Главное меню','home')]]))
 
     @router.message(F.text)
     async def text_input(message):
@@ -451,7 +487,7 @@ def make_router(settings):
                 choices = [[button(row['name'][:50],f"choose:{kind}:{row['id']}")] for row in rows[:10]]
                 back = f"wizard:{state['wizard_step']}" if state['wizard_step'] is not None else 'filter:edit'
                 choices.append([button('Назад',back)])
-                await message.answer('Выберите подходящий вариант:' if rows else 'Совпадений нет. Попробуйте другое название.',reply_markup=keyboard(choices))
+                await ui.menu(message,'Выберите подходящий вариант:' if rows else 'Совпадений нет. Попробуйте другое название.',reply_markup=keyboard(choices))
             elif kind == 'salary':
                 number = int(value.replace(' ',''))
                 if not 0 <= number <= 1000000000: raise ValueError('Введите сумму от 0 до 1 000 000 000.')
@@ -464,6 +500,6 @@ def make_router(settings):
             else:
                 await home(message)
         except (ValueError,PermissionError,TypeError) as exc:
-            await message.answer(str(exc) or 'Не удалось обработать ответ.',reply_markup=keyboard([[button('Назад','filter:edit')]]))
+            await ui.menu(message,str(exc) or 'Не удалось обработать ответ.',reply_markup=keyboard([[button('Назад','filter:edit')]]))
 
     return router

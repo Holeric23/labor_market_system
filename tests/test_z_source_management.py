@@ -81,7 +81,7 @@ def test_change_address_creates_new_source_without_reassigning_history():
 
 def test_sources_panel_create_edit_delete_restore_and_security():
     repo = Repository(); repo.bootstrap_owners({42})
-    settings = Settings('offline-fixture-token',frozenset({42}),None,False,('testserver',))
+    settings = Settings('offline-fixture-token',frozenset({42}),None,('testserver',))
     app = create_app(settings)
     with TestClient(app,base_url='https://testserver') as client:
         assert client.get('/sources').status_code == 401

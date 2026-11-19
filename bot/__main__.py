@@ -23,7 +23,7 @@ async def main():
     except ValueError:
         raise ValueError('TRUSTED_PROXY_IP must be a single trusted IP address') from None
     server = uvicorn.Server(uvicorn.Config(create_app(settings),host='0.0.0.0',port=8000,proxy_headers=True,forwarded_allow_ips=proxy,access_log=False))
-    if not settings.bot_enabled:
+    if not settings.bot_token:
         await server.serve()
         return
     async with Bot(settings.bot_token) as bot:

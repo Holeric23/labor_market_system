@@ -285,6 +285,20 @@ def create_app(settings):
             raise HTTPException(400,str(exc)) from None
         return RedirectResponse('/settings',status_code=303)
 
+    @app.post('/settings/bot')
+    async def bot_availability_save(request: Request):
+        session = owner(request)
+        data = await form(request)
+        csrf(request,data)
+        try:
+            action = data.get('action')
+            if action not in ('enable','disable'):
+                raise ValueError('Неизвестное действие.')
+            await run_in_threadpool(repository.set_bot_available,session['telegram_id'],action == 'enable',int(data.get('revision','')))
+        except (ValueError, PermissionError, OverflowError) as exc:
+            raise HTTPException(400,str(exc)) from None
+        return RedirectResponse('/settings',status_code=303)
+
     @app.get('/product')
     def product_page(request: Request):
         session = owner(request)

@@ -173,7 +173,7 @@ def _init_data(token, identity):
 def test_miniapp_signature_csrf_admin_routes_and_replay():
     token = 'offline-fixture-token'
     Repository().bootstrap_owners({42})
-    app = create_app(Settings(token,frozenset({42}),None,False,('testserver',)))
+    app = create_app(Settings(token,frozenset({42}),None,('testserver',)))
     with TestClient(app,base_url='https://testserver') as client:
         assert client.get('/clients').status_code == 401
         page = client.get('/miniapp')

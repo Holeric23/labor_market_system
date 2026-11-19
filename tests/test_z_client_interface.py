@@ -7,8 +7,9 @@ from types import SimpleNamespace
 
 import pytest
 from aiogram import Bot, Dispatcher
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.client.session.base import BaseSession
-from aiogram.methods import AnswerCallbackQuery, AnswerInlineQuery, GetMe, SendMessage
+from aiogram.methods import AnswerCallbackQuery, AnswerInlineQuery, DeleteMessage, GetMe, SendMessage
 from aiogram.types import Chat, Message, Update, User
 from fastapi.testclient import TestClient
 
@@ -142,27 +143,33 @@ def test_one_time_activation_and_concurrent_redemption():
 
 class FakeTelegramSession(BaseSession):
     def __init__(self):
-        super().__init__(); self.sent=[]; self.inline=[]
+        super().__init__(); self.sent=[]; self.inline=[]; self.callbacks=[]; self.deleted=[]; self.fail_send=False; self.fail_delete=False
     async def close(self): pass
     async def stream_content(self,*args,**kwargs):
         if False: yield b''
     async def make_request(self,bot,method,timeout=None):
-        if isinstance(method,AnswerCallbackQuery): return True
+        if isinstance(method,AnswerCallbackQuery):
+            self.callbacks.append(method); return True
         if isinstance(method,AnswerInlineQuery):
             self.inline.append(method); return True
+        if isinstance(method,DeleteMessage):
+            if self.fail_delete: raise TelegramBadRequest(method=method,message='fixture')
+            self.deleted.append((int(method.chat_id),method.message_id)); return True
         if isinstance(method,GetMe):
             return User(id=123456,is_bot=True,first_name='Test',username='fixture_test_bot')
         if isinstance(method,SendMessage):
+            if self.fail_send: raise TelegramBadRequest(method=method,message='fixture')
             self.sent.append(method)
-            return Message(message_id=len(self.sent),date=datetime.now(timezone.utc),
+            return Message(message_id=10000+len(self.sent),date=datetime.now(timezone.utc),
                            chat=Chat(id=int(method.chat_id),type='private'),text=method.text).as_(bot)
         raise AssertionError(type(method).__name__)
 
 
 def test_telegram_buttons_connected_to_database():
+    with connect() as con: con.execute('UPDATE app_settings SET customer_bot_enabled=true WHERE singleton=true')
     client = configure_documents(); user = 810006
     seed_vacancies()
-    settings = Settings('123456:fixture',frozenset({42}),None,False,('testserver',))
+    settings = Settings('123456:fixture',frozenset({42}),None,('testserver',))
     session = FakeTelegramSession(); bot = Bot(settings.bot_token,session=session)
     dp = Dispatcher(); dp.include_router(make_router(settings))
     person = User(id=user,is_bot=False,first_name='Test')
@@ -198,8 +205,75 @@ def test_telegram_buttons_connected_to_database():
     asyncio.run(run())
 
 
+def test_temporary_navigation_preserves_delivered_vacancies():
+    from aiogram.types import CallbackQuery
+    client = configure_documents(); user=810010
+    onboarding(client,user); seed_vacancies(2)
+    client.draft(user,{},name='Все вакансии'); client.save_filter(user)
+    with connect() as con: con.execute('UPDATE app_settings SET customer_bot_enabled=true WHERE singleton=true')
+    settings=Settings('123456:fixture',frozenset({42}),None,('testserver',))
+    session=FakeTelegramSession(); bot=Bot(settings.bot_token,session=session)
+    dp=Dispatcher(); dp.include_router(make_router(settings))
+    person=User(id=user,is_bot=False,first_name='Test')
+    async def command(text,index,dispatcher=dp):
+        msg=Message(message_id=index,date=datetime.now(timezone.utc),chat=Chat(id=user,type='private'),from_user=person,text=text)
+        await dispatcher.feed_update(bot,Update(update_id=index,message=msg))
+    async def click(data,index,message_id):
+        message=Message(message_id=message_id,date=datetime.now(timezone.utc),chat=Chat(id=user,type='private'),text='Меню')
+        query=CallbackQuery(id=str(index),from_user=person,chat_instance='fixture',message=message,data=data)
+        await dp.feed_update(bot,Update(update_id=index,callback_query=query))
+    async def exercise():
+        await command('/start',101)
+        first=10000+len(session.sent)
+        assert (user,101) in session.deleted
+        await click('how',102,first)
+        second=10000+len(session.sent)
+        assert (user,first) in session.deleted
+        await click('search',103,second)
+        selection=10000+len(session.sent)
+        assert (user,second) in session.deleted and (user,selection) not in session.deleted
+        card_data=session.sent[-1].reply_markup.inline_keyboard[0][0].callback_data
+        await click(card_data,104,selection)
+        card=10000+len(session.sent)
+        await click('home',105,card)
+        menu=10000+len(session.sent)
+        assert (user,selection) not in session.deleted and (user,card) not in session.deleted
+        await click('filters',106,menu)
+        final_menu=10000+len(session.sent)
+        assert (user,menu) in session.deleted and (user,selection) not in session.deleted
+        # A new dispatcher simulates a restart: the last temporary message remains tracked.
+        restarted=Dispatcher(); restarted.include_router(make_router(settings))
+        await command('/start',107,restarted)
+        assert (user,final_menu) in session.deleted and (user,107) in session.deleted
+        assert (user,selection) not in session.deleted and (user,card) not in session.deleted
+        with connect() as con:
+            assert con.execute("SELECT count(*) AS n FROM selections WHERE telegram_id=%s AND status='delivered'",(user,)).fetchone()['n']==1
+    asyncio.run(exercise())
+
+
+def test_failed_send_keeps_previous_menu_and_user_input():
+    user=810011; settings=Settings('123456:fixture',frozenset({42}),None,('testserver',))
+    with connect() as con: con.execute('UPDATE app_settings SET customer_bot_enabled=true WHERE singleton=true')
+    session=FakeTelegramSession(); bot=Bot(settings.bot_token,session=session); dp=Dispatcher(); dp.include_router(make_router(settings))
+    person=User(id=user,is_bot=False,first_name='Test')
+    async def message(index):
+        msg=Message(message_id=index,date=datetime.now(timezone.utc),chat=Chat(id=user,type='private'),from_user=person,text='/start')
+        await dp.feed_update(bot,Update(update_id=index,message=msg))
+    async def exercise():
+        await message(301); previous=10000+len(session.sent)
+        session.fail_send=True
+        with pytest.raises(TelegramBadRequest): await message(302)
+        assert (user,previous) not in session.deleted and (user,302) not in session.deleted
+        with connect() as con: assert con.execute('SELECT message_id FROM telegram_ui_messages WHERE chat_id=%s',(user,)).fetchone()['message_id']==previous
+        session.fail_send=False; session.fail_delete=True
+        await message(303)  # Telegram can reject deletion; navigation still succeeds.
+        assert len(session.sent)==2
+    asyncio.run(exercise())
+
+
 def test_inline_manager_authorization():
-    settings = Settings('123456:fixture',frozenset({42}),None,False,('testserver',))
+    with connect() as con: con.execute('UPDATE app_settings SET customer_bot_enabled=true WHERE singleton=true')
+    settings = Settings('123456:fixture',frozenset({42}),None,('testserver',))
     Repository().bootstrap_owners({42})
     session = FakeTelegramSession(); bot = Bot(settings.bot_token,session=session)
     dp = Dispatcher(); dp.include_router(make_router(settings))
@@ -217,9 +291,62 @@ def test_inline_manager_authorization():
     asyncio.run(run())
 
 
+def test_bot_availability_and_admin_access():
+    from aiogram.types import CallbackQuery, InlineQuery
+    from test_product import _csrf, _init_data
+    from bot.telegram import UNAVAILABLE
+    repo = Repository(); repo.bootstrap_owners({42})
+    settings = Settings('123456:fixture',frozenset({42}),'https://example.test/miniapp',('testserver',))
+    app = create_app(settings)
+    session = FakeTelegramSession(); bot = Bot(settings.bot_token,session=session)
+    dp = Dispatcher(); dp.include_router(make_router(settings))
+    with connect() as con:
+        con.execute('UPDATE app_settings SET customer_bot_enabled=false WHERE singleton=true')
+    user = 81123456
+    async def feed():
+        person=User(id=user,is_bot=False,first_name='Test')
+        admin=User(id=42,is_bot=False,first_name='Owner')
+        def msg(sender,text,index):
+            return Update(update_id=index,message=Message(message_id=index,date=datetime.now(timezone.utc),chat=Chat(id=sender.id,type='private'),from_user=sender,text=text))
+        await dp.feed_update(bot,msg(person,'/start',1))
+        assert session.sent[-1].text == UNAVAILABLE
+        with connect() as con:
+            assert not con.execute('SELECT 1 FROM clients WHERE telegram_id=%s',(user,)).fetchone()
+        message=Message(message_id=2,date=datetime.now(timezone.utc),chat=Chat(id=user,type='private'),text='Menu')
+        await dp.feed_update(bot,Update(update_id=2,callback_query=CallbackQuery(id='cb',from_user=person,chat_instance='t',message=message,data='search')))
+        assert session.callbacks[-1].show_alert and session.callbacks[-1].text == UNAVAILABLE
+        await dp.feed_update(bot,Update(update_id=3,inline_query=InlineQuery(id='q',from_user=admin,query='30',offset='')))
+        assert session.inline[-1].results == []
+        await dp.feed_update(bot,msg(admin,'/admin',4))
+        assert session.sent[-1].reply_markup.inline_keyboard[0][0].web_app.url == 'https://example.test/miniapp'
+    asyncio.run(feed())
+    with TestClient(app,base_url='https://testserver') as client:
+        assert client.post('/settings/bot',data={'action':'enable','revision':'0','csrf':'invalid'}).status_code==401
+        login=client.get('/miniapp')
+        assert client.post('/miniapp',data={'csrf':_csrf(login),'init_data':_init_data(settings.bot_token,42)},follow_redirects=False).status_code==303
+        page=client.get('/settings'); csrf=_csrf(page)
+        assert 'временно недоступен' in page.text
+        assert '<title>Настройки</title>' in page.text
+        assert page.text.count('action="/settings/bot"') == 1
+        rev=repo.public_settings()['revision']
+        assert client.post('/settings/bot',data={'action':'enable','revision':str(rev),'csrf':'invalid'}).status_code==403
+        assert client.post('/settings/bot',data={'action':'enable','revision':str(rev),'csrf':csrf},follow_redirects=False).status_code==303
+        assert repo.bot_available()
+        assert client.post('/settings/bot',data={'action':'disable','revision':str(rev),'csrf':csrf}).status_code==400
+        assert 'доступен клиентам' in client.get('/settings').text
+    async def enabled():
+        person=User(id=user,is_bot=False,first_name='Test')
+        update=Update(update_id=10,message=Message(message_id=10,date=datetime.now(timezone.utc),chat=Chat(id=user,type='private'),from_user=person,text='/start'))
+        await dp.feed_update(bot,update)
+        assert 'Первые три' in session.sent[-1].text
+    asyncio.run(enabled())
+    with pytest.raises(PermissionError):
+        repo.set_bot_available(99999,False,repo.public_settings()['revision'])
+
+
 def test_owner_product_panel():
     from test_product import _csrf, _init_data
-    settings = Settings('offline-fixture-token',frozenset({42}),None,False,('testserver',))
+    settings = Settings('offline-fixture-token',frozenset({42}),None,('testserver',))
     Repository().bootstrap_owners({42})
     app = create_app(settings)
     with TestClient(app,base_url='https://testserver') as client:

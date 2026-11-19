@@ -120,7 +120,24 @@ class Repository:
 
     def public_settings(self):
         with connect() as con:
-            return con.execute('SELECT manager_url,default_access_days,revision FROM app_settings WHERE singleton=true').fetchone()
+            return con.execute('SELECT manager_url,default_access_days,revision,customer_bot_enabled FROM app_settings WHERE singleton=true').fetchone()
+
+    def bot_available(self):
+        with connect() as con:
+            row = con.execute('SELECT customer_bot_enabled FROM app_settings WHERE singleton=true').fetchone()
+            return bool(row and row['customer_bot_enabled'])
+
+    def set_bot_available(self, actor, enabled, revision):
+        if type(enabled) is not bool:
+            raise ValueError('Некорректное состояние бота.')
+        with connect() as con:
+            _owner(con, actor)
+            prior = con.execute('SELECT customer_bot_enabled,revision FROM app_settings WHERE singleton=true FOR UPDATE').fetchone()
+            if not prior or prior['revision'] != revision:
+                raise ValueError('Настройки изменились; обновите страницу.')
+            con.execute('UPDATE app_settings SET customer_bot_enabled=%s,revision=revision+1,updated_at=now(),updated_by=%s WHERE singleton=true', (enabled,actor))
+            con.execute('INSERT INTO settings_history(actor_id,previous_values,new_values) VALUES (%s,%s::jsonb,%s::jsonb)',
+                        (actor,json.dumps({'customer_bot_enabled':prior['customer_bot_enabled']}),json.dumps({'customer_bot_enabled':enabled})))
 
     def save_settings(self, actor, manager_url, default_days, revision):
         manager_url = manager_url.strip() or None

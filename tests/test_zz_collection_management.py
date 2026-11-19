@@ -128,7 +128,7 @@ def test_retention_preserves_saved_unknown_recent_and_shared_content():
 
 def test_admin_collection_and_retention_routes():
     repo,identity,address=source()
-    app=create_app(Settings('offline-fixture-token',frozenset({42}),None,False,('testserver',)))
+    app=create_app(Settings('offline-fixture-token',frozenset({42}),None,('testserver',)))
     with TestClient(app,base_url='https://testserver') as client:
         assert client.post(f'/sources/{identity}/collect',data={'csrf':'bad','mode':'history'}).status_code==401
         page=client.get('/miniapp')
