@@ -56,7 +56,7 @@ def store_batch(source, run_id, batch, inference):
     with connect() as con:
         con.execute('SELECT pg_advisory_xact_lock(%s)', (174925603,))
         current = con.execute('SELECT * FROM sources WHERE id=%s FOR UPDATE', (source['id'],)).fetchone()
-        if not current or not current['enabled'] or current['revision'] != source['revision']:
+        if not current or not current['enabled'] or current['deleted_at'] is not None or current['revision'] != source['revision']:
             raise ValueError('Настройки источника изменились во время запуска')
         if not batch.publications:
             con.execute('UPDATE sources SET cursor=%s WHERE id=%s', (Jsonb(batch.cursor['source']),source['id']))

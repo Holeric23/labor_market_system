@@ -25,6 +25,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      parser:
+        condition: service_started
     environment:
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL}
       BOT_ENABLED: ${BOT_ENABLED:-false}
@@ -38,7 +40,8 @@ services:
 
   parser:
     image: labor-market-system-parser:local
-    profiles: ["parsing"]
+    restart: unless-stopped
+    command: ["--worker"]
     build:
       context: .
       dockerfile: Dockerfile.parser

@@ -4,8 +4,6 @@
 <form method="post" action="/product"><input type="hidden" name="csrf" value="{{ session.csrf }}">
 <label>Вакансий в подборке<input type="number" name="selection_limit" min="1" max="20" value="{{ settings.selection_limit }}" required></label>
 <label>Стоимость доступа<textarea name="pricing_text" maxlength="2000" rows="4">{{ settings.pricing_text or '' }}</textarea></label>
-<label>Другие услуги ПРОЩЕ<textarea name="services_text" maxlength="2000" rows="4">{{ settings.services_text or '' }}</textarea></label>
-<label>Ссылка на другие услуги<input type="url" name="services_url" value="{{ settings.services_url or '' }}"></label>
 <button>Сохранить настройки</button></form></section>
 <section class="panel"><h2>Документы</h2>
 <p>Добавьте ссылку и полный утверждённый текст каждой редакции. Условия, политика и согласие нужны до начала поиска. Тексты сохраняются с номером версии.</p>

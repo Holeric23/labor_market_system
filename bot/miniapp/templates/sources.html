@@ -1,4 +1,114 @@
-{% extends 'base.html' %}{% block title %}Источники{% endblock %}{% block content %}
-<h1>Источники</h1><p class="muted">Парсеры запускаются отдельно. Изменение настроек само по себе не запускает сбор.</p>
-<section class="panel"><h2>Добавить или изменить источник</h2><form method="post" action="/sources"><input type="hidden" name="csrf" value="{{ session.csrf }}"><label>Тип<select name="kind"><option value="telegram">Telegram</option><option value="designhunters">DesignHunters</option></select></label><label>Название<input name="name" required></label><label>Адрес<input name="address" required></label><label>Интервал, секунд<input type="number" name="interval_seconds" value="3600" min="60" max="31536000" required></label><label>Размер пакета<input type="number" name="batch_size" value="50" min="1" max="200"></label><label>Максимум публикаций за запуск<input type="number" name="max_items" value="1000" min="1" max="100000"></label><details><summary>Дополнительные параметры</summary><label>Окно проверки правок Telegram, дней<input type="number" name="overlap_days" value="3" min="1" max="30"></label><label>Лимит проверки правок<input type="number" name="overlap_limit" value="500" min="1" max="5000"></label><label>Тайм-аут DesignHunters, мс<input type="number" name="timeout_ms" value="30000" min="1000" max="120000"></label><label>Пауза DesignHunters, секунд<input type="number" name="delay_seconds" value="2" min="0" max="60"></label></details><label class="check"><input type="checkbox" name="enabled" value="1"> Источник включён</label><label class="check"><input type="checkbox" name="schedule_enabled" value="1"> Включить расписание</label><button>Сохранить</button></form></section>
-<section class="panel"><h2>Настроенные источники</h2>{% if sources %}<div class="table-scroll"><table><thead><tr><th>Тип</th><th>Название</th><th>Адрес</th><th>Статус</th></tr></thead><tbody>{% for source in sources %}<tr><td>{{ source.kind }}</td><td>{{ source.name }}</td><td>{{ source.address }}</td><td>{{ 'Включён' if source.enabled else 'Выключен' }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>Источники не настроены.</p>{% endif %}</section>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Источники{% endblock %}
+{% macro fields(source=none) %}
+  {% if source %}
+    <input type="hidden" name="kind" value="{{ source.kind }}">
+    <input type="hidden" name="revision" value="{{ source.revision }}">
+    <p>Тип: {{ 'Telegram' if source.kind == 'telegram' else 'DesignHunters' }}</p>
+  {% else %}
+    <label>Тип<select name="kind"><option value="telegram">Telegram</option><option value="designhunters">DesignHunters</option></select></label>
+  {% endif %}
+  <label>Название<input name="name" maxlength="160" value="{{ source.name if source else '' }}" required></label>
+  <label>Адрес<input type="url" name="address" value="{{ source.address if source else '' }}" required></label>
+  {% if source %}<small>При изменении адреса создаётся новый источник, а прежний переносится в удалённые вместе с историей.</small>{% endif %}
+  <label>Интервал проверки, секунд<input type="number" name="interval_seconds" value="{{ source.interval_seconds if source else 3600 }}" min="60" max="31536000" required></label>
+  <label>Размер пакета<input type="number" name="batch_size" value="{{ source.parameters.get('batch_size','') if source else 50 }}" min="1" max="200"></label>
+  <label>Максимум публикаций за запуск<input type="number" name="max_items" value="{{ source.parameters.get('max_items','') if source else 1000 }}" min="1" max="100000"></label>
+  <details><summary>Дополнительные параметры</summary>
+    <label>Окно проверки правок Telegram, дней<input type="number" name="overlap_days" value="{{ source.parameters.get('overlap_days','') if source else '' }}" min="1" max="30"></label>
+    <label>Лимит проверки правок<input type="number" name="overlap_limit" value="{{ source.parameters.get('overlap_limit','') if source else '' }}" min="1" max="5000"></label>
+    <label>Тайм-аут DesignHunters, мс<input type="number" name="timeout_ms" value="{{ source.parameters.get('timeout_ms','') if source else '' }}" min="1000" max="120000"></label>
+    <label>Пауза DesignHunters, секунд<input type="number" name="delay_seconds" value="{{ source.parameters.get('delay_seconds','') if source else '' }}" min="0" max="60"></label>
+  </details>
+  <label class="check"><input type="checkbox" name="enabled" value="1" {% if source and source.enabled %}checked{% endif %}> Источник включён</label>
+  <label class="check"><input type="checkbox" name="schedule_enabled" value="1" {% if source and source.schedule_enabled %}checked{% endif %}> Включить расписание проверки</label>
+{% endmacro %}
+{% block content %}
+<h1>Источники</h1>
+<p class="muted">Здесь можно добавить источник, изменить его настройки или удалить. Сохранение настроек само по себе не запускает сбор.</p>
+<section class="panel">
+  <h2>Управление сбором</h2>
+  <p>Исполнитель: {% if worker_online %}работает{% else %}не отвечает — задания останутся в очереди до запуска контейнера парсера{% endif %}.</p>
+  <p>Откройте источник ниже и выберите первичный сбор или сбор новых публикаций. Для Telegram сначала выполните первичный сбор.</p>
+  <details><summary>Запустить сбор для всех включённых источников</summary>
+    <p>Задания будут выполняться по очереди. При сборе новых публикаций Telegram-каналы без первичного сбора пропускаются.</p>
+    <form method="post" action="/collection/all"><input type="hidden" name="csrf" value="{{ session.csrf }}">
+      <button name="mode" value="history">Первичный сбор всех</button>
+      <button name="mode" value="new">Собрать новые из всех</button>
+    </form>
+  </details>
+  <a href="/sources">Обновить состояние</a>
+  {% if jobs %}
+  <div class="table-scroll"><table><thead><tr><th>Источник</th><th>Режим</th><th>Состояние</th><th>Начало</th><th>Результат</th><th></th></tr></thead><tbody>
+  {% for job in jobs %}
+  <tr><td>{{ job.name }}</td><td>{{ 'История' if job.mode == 'history' else 'Новые' }}</td>
+    <td>{% if job.cancel_requested and job.status == 'running' %}Останавливается{% else %}{{ {'queued':'В очереди','running':'Выполняется','succeeded':'Завершено','failed':'Ошибка','cancelled':'Отменено'}[job.status] }}{% endif %}</td>
+    <td>{{ job.started_at or job.requested_at }}</td><td>{% if job.inserted_count is not none %}Новых текстов: {{ job.inserted_count }}{% endif %}{% if job.error %} {{ job.error }}{% endif %}</td>
+    <td>{% if job.status in ('queued','running') and not job.cancel_requested %}<form method="post" action="/collection/{{ job.id }}/cancel"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button>Остановить</button></form>{% endif %}</td></tr>
+  {% endfor %}</tbody></table></div>{% else %}<p>Заданий сбора пока нет.</p>{% endif %}
+</section>
+<section class="panel"><h2>Удаление старых публикаций</h2>
+  <p>Telegram-парсер собирает публикации от новых к старым, останавливаясь на границе указанного срока. Этот срок действует при сборе независимо от включения очистки. Если достигнут максимум публикаций за запуск, следующий запуск продолжит сбор с сохранённого места.</p>
+  <p>Если очистка включена, после успешного сбора старые публикации удаляются. Сохранённые пользователями вакансии и записи без даты сохраняются. Изменение настройки само по себе очистку не запускает.</p>
+  <form method="post" action="/retention"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="revision" value="{{ retention.revision }}">
+    <label>Актуальность публикаций, дней<input type="number" name="days" min="1" max="3650" value="{{ retention.retention_days }}" required></label>
+    <label class="check"><input type="checkbox" name="enabled" value="1" {% if retention.retention_enabled %}checked{% endif %}> Автоматически удалять устаревшие публикации после сбора</label>
+    <button>Сохранить срок хранения</button>
+  </form>
+  {% if retention.last_finished_at %}<p><small>Последняя очистка: {{ retention.last_finished_at }}{% if retention.last_error %} · Ошибка: {{ retention.last_error }}{% else %} · Выполнена{% endif %}</small></p>{% endif %}
+</section>
+<section class="panel">
+  <h2>Добавить источник</h2>
+  <form method="post" action="/sources">
+    <input type="hidden" name="csrf" value="{{ session.csrf }}">
+    {{ fields() }}
+    <button>Добавить источник</button>
+  </form>
+</section>
+<section class="panel">
+  <h2>Настроенные источники</h2>
+  {% if sources %}
+    {% for source in sources %}
+      <details>
+        <summary>{{ source.name }} · {{ 'Telegram' if source.kind == 'telegram' else 'DesignHunters' }} · {{ 'включён' if source.enabled else 'выключен' }} · Изменить</summary>
+        <p><a href="{{ source.address }}" rel="noopener noreferrer">{{ source.address }}</a><br><small>Расписание: {{ 'включено' if source.schedule_enabled else 'выключено' }}</small></p>
+        {% if source.enabled %}
+        <form method="post" action="/sources/{{ source.id }}/collect">
+          <input type="hidden" name="csrf" value="{{ session.csrf }}">
+          <button name="mode" value="history">Первичный сбор</button>
+          <button name="mode" value="new">Собрать новые</button>
+        </form>
+        {% else %}<p><small>Включите источник, чтобы запустить сбор.</small></p>{% endif %}
+        <form method="post" action="/sources/{{ source.id }}/edit">
+          <input type="hidden" name="csrf" value="{{ session.csrf }}">
+          {{ fields(source) }}
+          <button>Сохранить изменения</button>
+        </form>
+        <details>
+          <summary>Удалить источник</summary>
+          <p>Источник будет отключён и убран из списка. Собранные публикации и история останутся в базе; источник можно восстановить.</p>
+          <form method="post" action="/sources/{{ source.id }}/delete">
+            <input type="hidden" name="csrf" value="{{ session.csrf }}">
+            <input type="hidden" name="revision" value="{{ source.revision }}">
+            <button>Подтвердить удаление</button>
+          </form>
+        </details>
+      </details>
+    {% endfor %}
+  {% else %}<p>Источники не настроены.</p>{% endif %}
+</section>
+{% if archived_sources %}
+<section class="panel"><h2>Удалённые источники</h2>
+  <p>При восстановлении источник останется выключенным; его можно будет включить в настройках.</p>
+  {% for source in archived_sources %}
+    <details><summary>{{ source.name }} · {{ source.address }}</summary>
+      <form method="post" action="/sources/{{ source.id }}/restore">
+        <input type="hidden" name="csrf" value="{{ session.csrf }}">
+        <input type="hidden" name="revision" value="{{ source.revision }}">
+        <button>Восстановить</button>
+      </form>
+    </details>
+  {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

@@ -2,7 +2,6 @@
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from market_system.paths import STATE_DIR
 
 
 async def batches(source, mode):
@@ -21,6 +20,7 @@ async def batches(source, mode):
     cursor = {'source':state, 'seen':0}
     if source['kind'] == 'telegram':
         from telethon import TelegramClient
+        from market_system.paths import STATE_DIR
         from market_system.core.parsers.telegram.telegram_parser import TelegramParser
         api_id, api_hash = os.environ.get('TELEGRAM_API_ID',''), os.environ.get('TELEGRAM_API_HASH','')
         if not api_id or not api_hash:
@@ -28,8 +28,9 @@ async def batches(source, mode):
         session = STATE_DIR/'collection/telegram.session'
         if not session.is_file():
             raise ValueError('Не создана отдельная Telegram-сессия парсера')
-        cursor.update(phase='history' if mode == 'history' else 'overlap',
-                      cutoff=(datetime.now(timezone.utc)-timedelta(days=parameters['overlap_days'])).isoformat())
+        cursor.update(phase='history' if mode == 'history' else 'new',
+                      cutoff=(datetime.now(timezone.utc)-timedelta(days=parameters['overlap_days'])).isoformat(),
+                      freshness_cutoff=source['freshness_cutoff'])
         parser = TelegramParser({source['name']:source['address']},use_proxy=False,session_name=str(session))
         client = TelegramClient(str(session),int(api_id),api_hash,timeout=30,connection_retries=2)
         try:

@@ -68,7 +68,9 @@ def _query(con, result_set, filters, offset, page_size, *, exclude_user=None):
             rows = con.execute('SELECT id FROM classes WHERE id=ANY(%s) AND namespace LIKE %s', (ids,namespace+'%')).fetchall()
             if {row['id'] for row in rows} != set(ids):
                 raise ValueError('Неизвестный идентификатор класса.')
-    where = ["r.result_set_id=%s", "r.post_type='vacancy'"]
+    where = ["r.result_set_id=%s", "r.post_type='vacancy'",
+             """(p.published_at IS NULL OR p.has_unknown OR NOT (SELECT retention_enabled FROM app_settings WHERE singleton=true)
+                  OR p.published_at >= now() - ((SELECT retention_days FROM app_settings WHERE singleton=true) * interval '1 day'))"""]
     args = [result_set,result_set]
     if exclude_user is not None:
         where.append('''NOT EXISTS (SELECT 1 FROM client_vacancies cv WHERE cv.telegram_id=%s AND cv.content_id=c.id AND cv.hidden)
@@ -115,7 +117,7 @@ def _query(con, result_set, filters, offset, page_size, *, exclude_user=None):
         if all_required:
             args.append(len(ids))
     args.extend([page_size+1,offset])
-    sql = '''WITH p AS (SELECT rp.content_id,max(rp.published_at) AS published_at,min(pub.url) AS source_url
+    sql = '''WITH p AS (SELECT rp.content_id,max(rp.published_at) AS published_at,bool_or(rp.published_at IS NULL) AS has_unknown,min(pub.url) AS source_url
       FROM result_publications rp JOIN publications pub ON pub.id=rp.publication_id
       WHERE rp.result_set_id=%s GROUP BY rp.content_id)
       SELECT c.id,c.text,r.salary_from,r.salary_to,r.currency,r.salary_period,r.work_format,p.published_at,p.source_url

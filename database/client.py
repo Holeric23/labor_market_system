@@ -322,18 +322,21 @@ class ClientRepository:
         with connect() as con:
             return con.execute('SELECT manager_url,selection_limit,pricing_text,services_text,services_url FROM app_settings WHERE singleton=true').fetchone()
 
-    def save_product_settings(self, actor, limit, pricing, services, services_url):
+    def save_product_settings(self, actor, limit, pricing, services=None, services_url=None):
         if type(limit) is not int or not 1 <= limit <= 20:
             raise ValueError('Размер подборки должен быть от 1 до 20.')
-        if len(pricing)>2000 or len(services)>2000:
+        if len(pricing)>2000 or (services is not None and len(services)>2000):
             raise ValueError('Слишком длинный текст.')
-        services_url = _url(services_url)
+        if services_url is not None:
+            services_url = _url(services_url)
         with connect() as con:
             _owner(con,actor)
             old = con.execute('SELECT selection_limit,pricing_text,services_text,services_url FROM app_settings WHERE singleton=true FOR UPDATE').fetchone()
-            new = {'selection_limit':limit,'pricing_text':pricing.strip() or None,'services_text':services.strip() or None,'services_url':services_url}
+            new = {'selection_limit':limit,'pricing_text':pricing.strip() or None,
+                   'services_text':old['services_text'] if services is None else services.strip() or None,
+                   'services_url':old['services_url'] if services_url is None else services_url}
             con.execute('''UPDATE app_settings SET selection_limit=%s,pricing_text=%s,services_text=%s,services_url=%s,
-              revision=revision+1,updated_at=now(),updated_by=%s WHERE singleton=true''', (limit,new['pricing_text'],new['services_text'],services_url,actor))
+              revision=revision+1,updated_at=now(),updated_by=%s WHERE singleton=true''', (limit,new['pricing_text'],new['services_text'],new['services_url'],actor))
             con.execute('INSERT INTO settings_history(actor_id,previous_values,new_values) VALUES (%s,%s,%s)', (actor,Jsonb(old),Jsonb(new)))
 
     def publish_document(self, actor, kind, version, url, body):

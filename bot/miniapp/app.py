@@ -16,6 +16,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from bot.miniapp import sessions
 from bot.miniapp.telegram_auth import TelegramAdminAuth
 from database.repository import Repository
+from database import collection
 from database.client import ClientRepository, DOCUMENT_LABELS
 
 HERE = Path(__file__).parent
@@ -174,7 +175,17 @@ def create_app(settings):
     @app.get('/sources')
     def sources(request: Request):
         session = owner(request)
-        return render(request,'sources.html',sources=repository.list_sources(session['telegram_id']))
+        jobs,worker_online = collection.list_jobs(session['telegram_id'])
+        return render(request,'sources.html',sources=repository.list_sources(session['telegram_id']),
+                      archived_sources=repository.list_sources(session['telegram_id'],archived=True),
+                      jobs=jobs,worker_online=worker_online,retention=collection.retention_settings(session['telegram_id']))
+
+    def source_fields(data):
+        keys = ('batch_size','max_items','overlap_days','overlap_limit','timeout_ms','delay_seconds')
+        parameters = {key:int(data[key]) for key in keys if data.get(key,'').strip()}
+        return (data.get('kind',''),data.get('name',''),data.get('address',''),
+                int(data.get('interval_seconds','')),data.get('enabled') == '1',
+                data.get('schedule_enabled') == '1',parameters)
 
     @app.post('/sources')
     async def source_save(request: Request):
@@ -182,9 +193,78 @@ def create_app(settings):
         data = await form(request)
         csrf(request,data)
         try:
-            keys = ('batch_size','max_items','overlap_days','overlap_limit','timeout_ms','delay_seconds')
-            parameters = {key:int(data[key]) for key in keys if data.get(key,'').strip()}
-            await run_in_threadpool(repository.save_source,session['telegram_id'],data.get('kind',''),data.get('name',''),data.get('address',''),int(data.get('interval_seconds','')),data.get('enabled') == '1',data.get('schedule_enabled') == '1',parameters)
+            await run_in_threadpool(repository.create_source,session['telegram_id'],*source_fields(data))
+        except (ValueError, PermissionError, OverflowError) as exc:
+            raise HTTPException(400,str(exc)) from None
+        return RedirectResponse('/sources',status_code=303)
+
+    @app.post('/sources/{source_id}/edit')
+    async def source_edit(request: Request, source_id: int):
+        session = owner(request)
+        data = await form(request)
+        csrf(request,data)
+        try:
+            await run_in_threadpool(repository.edit_source,session['telegram_id'],source_id,
+                                    int(data.get('revision','')),*source_fields(data))
+        except (ValueError, PermissionError, OverflowError) as exc:
+            raise HTTPException(400,str(exc)) from None
+        return RedirectResponse('/sources',status_code=303)
+
+    @app.post('/sources/{source_id}/collect')
+    async def source_collect(request: Request, source_id: int):
+        session = owner(request)
+        data = await form(request)
+        csrf(request,data)
+        try:
+            await run_in_threadpool(collection.enqueue,session['telegram_id'],source_id,data.get('mode',''))
+        except (ValueError, PermissionError, OverflowError) as exc:
+            raise HTTPException(400,str(exc)) from None
+        return RedirectResponse('/sources',status_code=303)
+
+    @app.post('/collection/all')
+    async def collection_all(request: Request):
+        session = owner(request)
+        data = await form(request)
+        csrf(request,data)
+        try:
+            await run_in_threadpool(collection.enqueue_all,session['telegram_id'],data.get('mode',''))
+        except (ValueError, PermissionError, OverflowError) as exc:
+            raise HTTPException(400,str(exc)) from None
+        return RedirectResponse('/sources',status_code=303)
+
+    @app.post('/collection/{job_id}/cancel')
+    async def collection_cancel(request: Request, job_id: str):
+        session = owner(request)
+        data = await form(request)
+        csrf(request,data)
+        try:
+            await run_in_threadpool(collection.cancel,session['telegram_id'],job_id)
+        except (ValueError, PermissionError, OverflowError) as exc:
+            raise HTTPException(400,str(exc)) from None
+        return RedirectResponse('/sources',status_code=303)
+
+    @app.post('/retention')
+    async def retention_save(request: Request):
+        session = owner(request)
+        data = await form(request)
+        csrf(request,data)
+        try:
+            await run_in_threadpool(collection.save_retention,session['telegram_id'],
+                data.get('enabled') == '1',int(data.get('days','')),int(data.get('revision','')))
+        except (ValueError, PermissionError, OverflowError) as exc:
+            raise HTTPException(400,str(exc)) from None
+        return RedirectResponse('/sources',status_code=303)
+
+    @app.post('/sources/{source_id}/{action}')
+    async def source_state(request: Request, source_id: int, action: str):
+        session = owner(request)
+        data = await form(request)
+        csrf(request,data)
+        if action not in ('delete','restore'):
+            raise HTTPException(404,'Действие не найдено.')
+        try:
+            operation = repository.archive_source if action == 'delete' else repository.restore_source
+            await run_in_threadpool(operation,session['telegram_id'],source_id,int(data.get('revision','')))
         except (ValueError, PermissionError, OverflowError) as exc:
             raise HTTPException(400,str(exc)) from None
         return RedirectResponse('/sources',status_code=303)
@@ -236,8 +316,7 @@ def create_app(settings):
         csrf(request,data)
         try:
             await run_in_threadpool(client_repository.save_product_settings,session['telegram_id'],
-                int(data.get('selection_limit','')),data.get('pricing_text',''),
-                data.get('services_text',''),data.get('services_url',''))
+                int(data.get('selection_limit','')),data.get('pricing_text',''))
         except (ValueError, PermissionError, OverflowError) as exc:
             raise HTTPException(400,str(exc)) from None
         return RedirectResponse('/product',status_code=303)

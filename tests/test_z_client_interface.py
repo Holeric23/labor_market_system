@@ -233,6 +233,7 @@ def test_owner_product_panel():
         assert result.status_code == 303
         result = client.post('/product/documents',data={'csrf':csrf,'kind':'offer','version':uuid.uuid4().hex,'url':'https://example.test/offer','body':'Тестовая оферта'},follow_redirects=False)
         assert result.status_code == 303 and 'Тестовая цена' in client.get('/product').text
+        assert 'Другие услуги ПРОЩЕ' not in client.get('/product').text
         result = client.post('/team',data={'csrf':csrf,'telegram_id':'812345','action':'enable'},follow_redirects=False)
         assert result.status_code == 303 and ClientRepository().can_issue(812345)
 

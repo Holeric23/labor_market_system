@@ -293,71 +293,7 @@ class TelegramParser(Parser):
         )
 
     async def managed_batches(self, client, source_name, channel_url, mode, cursor, parameters):
-        """Checkpointed public-channel collection. Caller commits each yielded batch."""
-        from copy import deepcopy
-        from datetime import timezone
-        from market_system.collection.runner import Batch
-        cursor = deepcopy(cursor)
-        state = cursor['source']
-        entity = await client.get_entity(channel_url)
-        if mode=='new' and 'high_water' not in state:
-            raise ValueError('Run history collection once before regular Telegram collection')
-        if 'upper_id' not in cursor:
-            latest = await client.get_messages(entity,limit=1)
-            cursor['upper_id'] = latest[0].id if latest else 0
-        upper = cursor['upper_id']
-        size = parameters['batch_size']
-        while True:
-            phase = cursor['phase']
-            if phase=='overlap':
-                remaining = parameters['overlap_limit']-cursor.get('overlap_seen',0)
-                if remaining<=0:
-                    cursor['phase']='new'
-                    yield Batch([],deepcopy(cursor))
-                    continue
-                messages = [m async for m in client.iter_messages(entity,limit=min(size,remaining),
-                    offset_id=cursor.get('overlap_offset',0),max_id=upper+1)]
-                cutoff = datetime.fromisoformat(cursor['cutoff'])
-                eligible = []
-                crossed = False
-                for message in messages:
-                    if message.date and message.date<cutoff:
-                        crossed=True
-                        break
-                    eligible.append(message)
-                cursor['overlap_seen']=cursor.get('overlap_seen',0)+len(messages)
-                if messages:
-                    cursor['overlap_offset']=messages[-1].id
-                if crossed or len(messages)<min(size,remaining) or cursor['overlap_seen']>=parameters['overlap_limit']:
-                    cursor['phase']='new'
-                publications=[RawPublication('telegram',source_name,m.text,self._build_message_url(channel_url,m.id),m.date)
-                              for m in eligible if m.text and m.text.strip()]
-                yield Batch(publications,deepcopy(cursor))
-                continue
-            remaining = parameters['max_items']-cursor['seen']
-            if remaining<=0:
-                yield Batch([],deepcopy(cursor),True)
-                return
-            limit = min(size,remaining)
-            if phase=='history':
-                messages=[m async for m in client.iter_messages(entity,limit=limit,
-                    offset_id=state.get('history_offset',0),max_id=upper+1)]
-            else:
-                messages=[m async for m in client.iter_messages(entity,limit=limit,reverse=True,
-                    min_id=state.get('high_water',0),max_id=upper+1)]
-            cursor['seen']+=len(messages)
-            if messages:
-                state['high_water']=max(state.get('high_water',0),max(m.id for m in messages))
-                if phase=='history':
-                    state['history_offset']=messages[-1].id
-            else:
-                state.setdefault('high_water',0)
-            exhausted = len(messages)<limit
-            if phase=='history' and exhausted:
-                state['history_done']=True
-            publications=[RawPublication('telegram',source_name,m.text,self._build_message_url(channel_url,m.id),m.date)
-                          for m in messages if m.text and m.text.strip()]
-            done = exhausted or cursor['seen']>=parameters['max_items']
-            yield Batch(publications,deepcopy(cursor),done)
-            if done:
-                return
+        """Collect the configured fresh window, newest first, with durable offsets."""
+        from parsers.telegram_window import telegram_batches
+        async for batch in telegram_batches(client,source_name,channel_url,mode,cursor,parameters,self._build_message_url):
+            yield batch

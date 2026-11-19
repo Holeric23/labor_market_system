@@ -21,6 +21,63 @@ def _owner(con, actor):
         raise PermissionError('Доступ ограничен.')
 
 
+def _source_fields(kind, name, address, interval_seconds, enabled, schedule_enabled, parameters):
+    if kind not in ('telegram','designhunters') or not isinstance(name,str) or not isinstance(address,str) or not name.strip() or not address.strip() or len(name)>160:
+        raise ValueError('Укажите поддерживаемый источник, название и адрес.')
+    if type(interval_seconds) is not int or not 60 <= interval_seconds <= 31536000:
+        raise ValueError('Интервал должен быть от 60 до 31536000 секунд.')
+    if type(enabled) is not bool or type(schedule_enabled) is not bool:
+        raise ValueError('Некорректное состояние источника.')
+    parameters = {} if parameters is None else parameters
+    limits = {'batch_size':(1,200),'max_items':(1,100000),'overlap_days':(1,30),
+              'overlap_limit':(1,5000),'timeout_ms':(1000,120000),'delay_seconds':(0,60)}
+    if not isinstance(parameters,dict) or set(parameters)-set(limits):
+        raise ValueError('Некорректные параметры парсера.')
+    for key,value in parameters.items():
+        low,high = limits[key]
+        if type(value) is not int or not low <= value <= high:
+            raise ValueError('Некорректный параметр парсера: '+key)
+    parsed = urlsplit(address.strip())
+    hostname = 't.me' if kind == 'telegram' else 'designhunters.ru'
+    if len(address)>1000 or parsed.scheme != 'https' or parsed.netloc != hostname or parsed.query or parsed.fragment or any(c.isspace() for c in address):
+        raise ValueError('Поддерживается только HTTPS-адрес источника '+hostname+'.')
+    if kind == 'telegram':
+        if not re.fullmatch(r'/[A-Za-z][A-Za-z0-9_]{3,31}/?',parsed.path):
+            raise ValueError('Укажите адрес публичного Telegram-канала.')
+        address = 'https://t.me/'+parsed.path.strip('/').lower()
+    return name.strip(),address.strip(),parameters
+
+
+def _source_identity(con, kind, address):
+    key = address.rsplit('/',1)[-1] if kind == 'telegram' else address
+    namespace = 174925604 if kind == 'telegram' else 174925605
+    con.execute('SELECT pg_advisory_xact_lock(%s, hashtext(%s))', (namespace,key))
+    if kind == 'telegram':
+        return con.execute('''SELECT s.* FROM sources s JOIN telegram_sources t ON t.source_id=s.id
+                              WHERE t.username=%s''', (key,)).fetchone()
+    return con.execute('SELECT * FROM sources WHERE kind=%s AND address=%s', (kind,address)).fetchone()
+
+
+def _source_event(con, actor, source, event, details):
+    con.execute('INSERT INTO source_events(source_id,actor_id,event_type,details) VALUES (%s,%s,%s,%s::jsonb)',
+                (source,actor,event,json.dumps(details,ensure_ascii=False)))
+
+
+def _source_version(source_id, revision):
+    if type(source_id) is not int or not 0 < source_id < 2**63 or type(revision) is not int or not 1 <= revision < 2**31:
+        raise ValueError('Некорректный источник.')
+
+
+def _insert_source(con, actor, kind, name, address, interval, enabled, scheduled, parameters):
+    if _source_identity(con,kind,address):
+        raise ValueError('Источник с таким адресом уже существует. Если он удалён, восстановите его из списка удалённых.')
+    row = con.execute('''INSERT INTO sources(kind,name,address,enabled,interval_seconds,schedule_enabled,next_run_at,parameters)
+      VALUES (%s,%s,%s,%s,%s,%s,CASE WHEN %s THEN now() ELSE NULL END,%s::jsonb) RETURNING id''',
+      (kind,name,address,enabled,interval,scheduled,scheduled,json.dumps(parameters))).fetchone()
+    _source_event(con,actor,row['id'],'created',{'name':name,'address':address,'kind':kind})
+    return row['id']
+
+
 class Repository:
     def managers(self, actor):
         with connect() as con:
@@ -191,10 +248,70 @@ class Repository:
             con.execute('UPDATE clients SET access_until=%s,revision=revision+1,updated_at=now() WHERE telegram_id=%s', (previous,user))
             con.execute("INSERT INTO access_events(grant_id,recipient_id,actor_id,event_type,details) VALUES (%s,%s,%s,'reverted',%s::jsonb)", (identity,user,actor,json.dumps({'previous_until':client['access_until'].isoformat() if client['access_until'] else None,'resulting_until':previous.isoformat() if previous else None})))
 
-    def list_sources(self, actor):
+    def list_sources(self, actor, *, archived=False):
         with connect() as con:
             _owner(con, actor)
-            return con.execute('SELECT * FROM sources ORDER BY id').fetchall()
+            return con.execute('SELECT * FROM sources WHERE (deleted_at IS NOT NULL)=%s ORDER BY id', (archived,)).fetchall()
+
+    def create_source(self, actor, kind, name, address, interval_seconds, enabled, schedule_enabled=False, parameters=None):
+        name,address,parameters = _source_fields(kind,name,address,interval_seconds,enabled,schedule_enabled,parameters)
+        with connect() as con:
+            _owner(con,actor)
+            return _insert_source(con,actor,kind,name,address,interval_seconds,enabled,schedule_enabled,parameters)
+
+    def edit_source(self, actor, source_id, revision, kind, name, address, interval_seconds, enabled, schedule_enabled=False, parameters=None):
+        name,address,parameters = _source_fields(kind,name,address,interval_seconds,enabled,schedule_enabled,parameters)
+        _source_version(source_id,revision)
+        with connect() as con:
+            _owner(con,actor)
+            old = con.execute('SELECT * FROM sources WHERE id=%s FOR UPDATE', (source_id,)).fetchone()
+            if not old or old['deleted_at'] is not None:
+                raise ValueError('Источник не найден или уже удалён.')
+            if old['revision'] != revision:
+                raise ValueError('Источник изменился; обновите страницу.')
+            same_address = old['address'] == address
+            if kind == 'telegram' and old['kind'] == kind:
+                old_username = con.execute('SELECT username FROM telegram_sources WHERE source_id=%s', (source_id,)).fetchone()
+                same_address = bool(old_username and old_username['username'] == address.rsplit('/',1)[-1])
+            if old['kind'] != kind:
+                raise ValueError('Тип источника изменить нельзя. Добавьте новый источник.')
+            if not same_address:
+                new_id = _insert_source(con,actor,kind,name,address,interval_seconds,enabled,schedule_enabled,parameters)
+                con.execute('''UPDATE sources SET deleted_at=now(),enabled=false,schedule_enabled=false,
+                  next_run_at=NULL,revision=revision+1 WHERE id=%s''', (source_id,))
+                _source_event(con,actor,source_id,'replaced',{'replacement_source_id':new_id})
+                return new_id
+            con.execute('''UPDATE sources SET name=%s,enabled=%s,interval_seconds=%s,schedule_enabled=%s,
+              parameters=%s::jsonb,next_run_at=CASE WHEN %s THEN COALESCE(next_run_at,now()) ELSE NULL END,
+              revision=revision+1 WHERE id=%s''',
+              (name,enabled,interval_seconds,schedule_enabled,json.dumps(parameters),schedule_enabled,source_id))
+            _source_event(con,actor,source_id,'updated',{'previous':{'name':old['name'],'enabled':old['enabled'],
+              'interval_seconds':old['interval_seconds'],'schedule_enabled':old['schedule_enabled'],'parameters':old['parameters']},
+              'new':{'name':name,'enabled':enabled,'interval_seconds':interval_seconds,
+              'schedule_enabled':schedule_enabled,'parameters':parameters}})
+            return source_id
+
+    def archive_source(self, actor, source_id, revision):
+        _source_version(source_id,revision)
+        with connect() as con:
+            _owner(con,actor)
+            row = con.execute('''UPDATE sources SET deleted_at=now(),enabled=false,schedule_enabled=false,
+              next_run_at=NULL,revision=revision+1 WHERE id=%s AND revision=%s AND deleted_at IS NULL RETURNING id''',
+              (source_id,revision)).fetchone()
+            if not row:
+                raise ValueError('Источник изменился или уже удалён; обновите страницу.')
+            _source_event(con,actor,source_id,'deleted',{})
+
+    def restore_source(self, actor, source_id, revision):
+        _source_version(source_id,revision)
+        with connect() as con:
+            _owner(con,actor)
+            row = con.execute('''UPDATE sources SET deleted_at=NULL,enabled=false,schedule_enabled=false,
+              next_run_at=NULL,revision=revision+1 WHERE id=%s AND revision=%s AND deleted_at IS NOT NULL RETURNING id''',
+              (source_id,revision)).fetchone()
+            if not row:
+                raise ValueError('Источник изменился или уже восстановлен; обновите страницу.')
+            _source_event(con,actor,source_id,'restored',{})
 
     def activate_result_set(self, actor, result_set_id):
         try:
@@ -216,46 +333,31 @@ class Repository:
             return True
 
     def save_source(self, actor, kind, name, address, interval_seconds, enabled, schedule_enabled=False, parameters=None):
-        if kind not in ('telegram','designhunters') or not isinstance(name,str) or not isinstance(address,str) or not name.strip() or not address.strip() or len(name)>160:
-            raise ValueError('Укажите поддерживаемый источник, название и адрес.')
-        if type(interval_seconds) is not int or not 60 <= interval_seconds <= 31536000:
-            raise ValueError('Интервал должен быть от 60 до 31536000 секунд.')
-        if type(enabled) is not bool or type(schedule_enabled) is not bool:
-            raise ValueError('Некорректное состояние источника.')
-        parameters = {} if parameters is None else parameters
-        limits = {'batch_size':(1,200),'max_items':(1,100000),'overlap_days':(1,30),
-                  'overlap_limit':(1,5000),'timeout_ms':(1000,120000),'delay_seconds':(0,60)}
-        if not isinstance(parameters,dict) or set(parameters)-set(limits):
-            raise ValueError('Некорректные параметры парсера.')
-        for key,value in parameters.items():
-            low,high = limits[key]
-            if type(value) is not int or not low <= value <= high:
-                raise ValueError('Некорректный параметр парсера: '+key)
-        parsed = urlsplit(address.strip())
-        hostname = 't.me' if kind == 'telegram' else 'designhunters.ru'
-        if len(address)>1000 or parsed.scheme != 'https' or parsed.netloc != hostname or parsed.query or parsed.fragment or any(c.isspace() for c in address):
-            raise ValueError('Поддерживается только HTTPS-адрес источника '+hostname+'.')
-        if kind == 'telegram' and not re.fullmatch(r'/[A-Za-z][A-Za-z0-9_]{3,31}/?',parsed.path):
-            raise ValueError('Укажите адрес публичного Telegram-канала.')
+        name,address,parameters = _source_fields(kind,name,address,interval_seconds,enabled,schedule_enabled,parameters)
         with connect() as con:
             _owner(con, actor)
             if kind == 'telegram':
-                username = parsed.path.strip('/').lower()
+                username = address.rsplit('/',1)[-1]
                 con.execute('SELECT pg_advisory_xact_lock(%s, hashtext(%s))', (174925604,username))
-                existing = con.execute('SELECT source_id FROM telegram_sources WHERE username=%s', (username,)).fetchone()
+                existing = con.execute('''SELECT t.source_id,s.deleted_at FROM telegram_sources t
+                  JOIN sources s ON s.id=t.source_id WHERE t.username=%s FOR UPDATE OF s''', (username,)).fetchone()
                 if existing:
+                    if existing['deleted_at'] is not None:
+                        raise ValueError('Источник удалён. Восстановите его из списка удалённых.')
                     return con.execute('''UPDATE sources SET name=%s,enabled=%s,interval_seconds=%s,
                       schedule_enabled=%s,parameters=%s::jsonb,
                       next_run_at=CASE WHEN %s THEN COALESCE(next_run_at,now()) ELSE NULL END,
-                      revision=revision+1 WHERE id=%s RETURNING id''',
+                      revision=revision+1 WHERE id=%s AND deleted_at IS NULL RETURNING id''',
                       (name.strip(),enabled,interval_seconds,schedule_enabled,json.dumps(parameters),schedule_enabled,existing['source_id'])).fetchone()['id']
-                address = 'https://t.me/'+username
-            return con.execute('''INSERT INTO sources(kind,name,address,enabled,interval_seconds,schedule_enabled,next_run_at,parameters)
+            row = con.execute('''INSERT INTO sources(kind,name,address,enabled,interval_seconds,schedule_enabled,next_run_at,parameters)
               VALUES (%s,%s,%s,%s,%s,%s,CASE WHEN %s THEN now() ELSE NULL END,%s::jsonb) ON CONFLICT(kind,address) DO UPDATE SET
               name=excluded.name, enabled=excluded.enabled, interval_seconds=excluded.interval_seconds,
               schedule_enabled=excluded.schedule_enabled, parameters=excluded.parameters,
               next_run_at=CASE WHEN excluded.schedule_enabled THEN COALESCE(sources.next_run_at,now()) ELSE NULL END,
-              revision=sources.revision+1 RETURNING id''', (kind,name.strip(),address.strip(),enabled,interval_seconds,schedule_enabled,schedule_enabled,json.dumps(parameters))).fetchone()['id']
+              revision=sources.revision+1 WHERE sources.deleted_at IS NULL RETURNING id''', (kind,name,address,enabled,interval_seconds,schedule_enabled,schedule_enabled,json.dumps(parameters))).fetchone()
+            if not row:
+                raise ValueError('Источник удалён. Восстановите его из списка удалённых.')
+            return row['id']
 
     def search_vacancies(self, *, limit=10, offset=0):
         if type(limit) is not int or type(offset) is not int or not 1 <= limit <= 30 or offset < 0:

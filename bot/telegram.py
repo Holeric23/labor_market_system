@@ -27,7 +27,7 @@ def link(text, url):
 def home_keyboard():
     return keyboard([[button('Найти вакансии','search')],
                      [button('Мои фильтры','filters'),button('Сохранённое','saved')],
-                     [button('Мой доступ','access'),button('Другие услуги ПРОЩЕ','services')],
+                     [button('Мой доступ','access')],
                      [button('Документы и помощь','documents')]])
 
 
@@ -293,10 +293,7 @@ def make_router(settings):
                 await run(clients.accept,user,int(data.split(':')[1]))
                 await documents(message,user); return
             if data == 'services':
-                config = await run(clients.settings)
-                rows = [[link('Подробнее',config['services_url'])]] if config['services_url'] else []
-                rows.append([button('Главное меню','home')])
-                await message.answer(config['services_text'] or 'Информация о других услугах появится здесь позже.',reply_markup=keyboard(rows)); return
+                await home(message); return
             if not await require_ready(message,user):
                 return
             if data == 'begin':
@@ -430,10 +427,6 @@ def make_router(settings):
                 await run(clients.mark,user,identity,int(ordinal),action)
                 text = {'save':'Вакансия сохранена.','unsave':'Вакансия убрана из сохранённого.','applied':'Отметили, что вы откликнулись.'}[action]
                 rows = [[button('К вакансии',f'card:{key}:{ordinal}')]]
-                config = await run(clients.settings)
-                if action == 'save' and config['services_text']:
-                    text += '\n\nУ ПРОЩЕ есть и другие услуги.'
-                    rows.append([button('Узнать больше','services')])
                 rows.append([button('Главное меню','home')])
                 await message.answer(text,reply_markup=keyboard(rows))
             else:
