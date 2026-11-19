@@ -3,6 +3,7 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+# Local configuration may contain credentials; only the template is tracked.
 .env
 .env.*
 !.env.example
