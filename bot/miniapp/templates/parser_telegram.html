@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Аккаунт парсера{% endblock %}
+{% block content %}
+<h1>Аккаунт Telegram для парсера</h1>
+<section class="panel">
+<p>Парсер читает каналы через пользовательский Telegram-аккаунт. Номер, код и пароль нужны только для входа и не сохраняются в настройках.</p>
+{% if notice %}<p role="alert">{{ notice }}</p>{% endif %}
+{% if not result.ok %}
+<p role="alert">{{ result.error }}</p>
+<a href="/parser/telegram">Проверить ещё раз</a>
+{% elif not login_allowed and result.stage != 'session_present' %}
+<p role="alert">Для ввода данных Telegram сначала настройте собственный HTTPS-адрес панели на сервере.</p>
+{% if result.stage in ('code','password') %}<form method="post" action="/parser/telegram/cancel"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button>Отменить вход</button></form>{% endif %}
+{% elif result.stage == 'idle' %}
+<p>Сессия ещё не создана. Telegram отправит код для подтверждения входа.</p>
+<form method="post" action="/parser/telegram/start"><input type="hidden" name="csrf" value="{{ session.csrf }}">
+<label>Номер телефона в международном формате<input type="tel" name="value" placeholder="+79991234567" autocomplete="off" maxlength="16" required></label>
+<button>Получить код</button></form>
+{% elif result.stage == 'code' %}
+<p>Введите код, который прислал Telegram. Если вход не завершить за 10 минут, его нужно будет начать заново.</p>
+<form method="post" action="/parser/telegram/code"><input type="hidden" name="csrf" value="{{ session.csrf }}">
+<label>Код Telegram<input type="text" name="value" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{3,12}" maxlength="12" required></label>
+<button>Подтвердить код</button></form>
+<form method="post" action="/parser/telegram/cancel"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button>Отменить вход</button></form>
+{% elif result.stage == 'password' %}
+<p>У аккаунта включена двухэтапная защита. Введите дополнительный пароль Telegram.</p>
+<form method="post" action="/parser/telegram/password"><input type="hidden" name="csrf" value="{{ session.csrf }}">
+<label>Пароль двухэтапной защиты<input type="password" name="value" autocomplete="off" maxlength="1024" required></label>
+<button>Войти</button></form>
+<form method="post" action="/parser/telegram/cancel"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button>Отменить вход</button></form>
+{% elif result.stage == 'session_present' %}
+<p>Файл сессии парсера сохранён. Его действительность проверяется при запуске сбора.</p>
+{% else %}<p>Вход выполняется. Обновите страницу через несколько секунд.</p>{% endif %}
+<p><a href="/sources">К источникам</a></p>
+</section>
+{% endblock %}

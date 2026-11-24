@@ -188,3 +188,36 @@ def test_miniapp_signature_csrf_admin_routes_and_replay():
         assert client.get('/catalog').status_code == 404
         page = client.get('/miniapp')
         assert client.post('/miniapp',data={'csrf':_csrf(page),'init_data':raw}).status_code == 403
+
+
+def test_miniapp_denies_direct_access_and_untrusted_telegram_data():
+    token='offline-fixture-token'; Repository().bootstrap_owners({42})
+    app=create_app(Settings(token,frozenset({42}),None,('testserver',)))
+    def signed(identity,stamp):
+        values={'auth_date':str(stamp),'user':json.dumps({'id':identity}),'query_id':uuid.uuid4().hex}
+        payload='\n'.join(f'{key}={value}' for key,value in sorted(values.items()))
+        secret=hmac.new(b'WebAppData',token.encode(),hashlib.sha256).digest()
+        values['hash']=hmac.new(secret,payload.encode(),hashlib.sha256).hexdigest()
+        return urlencode(values)
+    with TestClient(app,base_url='https://testserver') as client:
+        for path in ('/clients','/sources','/settings','/product','/team','/parser/telegram','/future-admin-page'):
+            response=client.get(path,headers={'X-Telegram-User-Id':'42','X-Requested-With':'Telegram'})
+            assert response.status_code==401
+            assert 'Доступ ограничен' in response.text and 'Клиенты</a>' not in response.text
+        assert client.post('/settings/bot',data={'csrf':'fake','action':'enable','revision':'0'}).status_code==401
+        page=client.get('/miniapp')
+        assert page.status_code==200 and 'Для доступа откройте панель в Telegram' in page.text
+        csrf=_csrf(page)
+        forged=urlencode({'auth_date':str(int(time.time())),'user':json.dumps({'id':42}),'hash':'0'*64})
+        for raw in (forged,signed(43,int(time.time())),signed(42,int(time.time())-301),'not-telegram-data'):
+            denied=client.post('/miniapp',data={'csrf':csrf,'init_data':raw},follow_redirects=False)
+            assert denied.status_code==403 and 'Доступ ограничен' in denied.text
+            assert client.get('/settings').status_code==401
+        success=client.post('/miniapp',data={'csrf':csrf,'init_data':signed(42,int(time.time()))},follow_redirects=False)
+        assert success.status_code==303 and client.get('/settings').status_code==200
+        try:
+            with connect() as con: con.execute('UPDATE staff SET active=false WHERE telegram_id=42')
+            denied=client.get('/settings')
+            assert denied.status_code==403 and 'Доступ ограничен' in denied.text
+        finally:
+            with connect() as con: con.execute('UPDATE staff SET active=true WHERE telegram_id=42')

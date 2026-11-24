@@ -109,3 +109,50 @@ def test_sources_panel_create_edit_delete_restore_and_security():
         assert client.post(f"/sources/{row['id']}/restore",data={'csrf':csrf,'revision':str(removed['revision'])},follow_redirects=False).status_code == 303
         restored = next(s for s in repo.list_sources(42) if s['id'] == row['id'])
         assert not restored['enabled']
+
+
+def test_parser_telegram_login_panel_owner_csrf_and_secret_handling(monkeypatch):
+    from bot.miniapp import parser_auth
+    repo=Repository(); repo.bootstrap_owners({42})
+    settings=Settings('offline-fixture-token',frozenset({42}),'https://testserver/miniapp',('testserver',))
+    state={'stage':'idle'}; calls=[]
+    def fake_request(action,actor,value=''):
+        calls.append((action,actor,value))
+        if action=='start': state['stage']='code'
+        elif action=='code': state['stage']='password'
+        elif action=='password': state['stage']='session_present'
+        elif action=='cancel': state['stage']='idle'
+        return {'ok':True,'stage':state['stage']}
+    monkeypatch.setattr(parser_auth,'request',fake_request)
+    app=create_app(settings)
+    with TestClient(app,base_url='https://testserver') as client:
+        assert client.get('/parser/telegram').status_code==401
+        assert client.post('/parser/telegram/start',data={'csrf':'bad','value':'+79991234567'}).status_code==401
+        login=client.get('/miniapp')
+        assert client.post('/miniapp',data={'csrf':_csrf(login),'init_data':_init_data(settings.bot_token,42)},follow_redirects=False).status_code==303
+        page=client.get('/parser/telegram'); csrf=_csrf(page)
+        assert page.status_code==200 and 'Номер телефона' in page.text
+        assert client.post('/parser/telegram/start',data={'csrf':'bad','value':'+79991234567'}).status_code==403
+        result=client.post('/parser/telegram/start',data={'csrf':csrf,'value':'+79991234567'},follow_redirects=False)
+        assert result.status_code==303 and '+7999' not in result.headers['location']
+        page=client.get('/parser/telegram'); assert 'Код Telegram' in page.text and '+7999' not in page.text
+        result=client.post('/parser/telegram/code',data={'csrf':csrf,'value':'12345'},follow_redirects=False)
+        assert result.status_code==303 and '12345' not in result.headers['location']
+        page=client.get('/parser/telegram'); assert 'Пароль двухэтапной защиты' in page.text
+        result=client.post('/parser/telegram/password',data={'csrf':csrf,'value':'secret-password'},follow_redirects=False)
+        assert result.status_code==303 and 'secret-password' not in result.headers['location']
+        page=client.get('/parser/telegram'); assert 'сессии парсера сохранён' in page.text and 'secret-password' not in page.text
+        assert all(actor==42 for _,actor,_ in calls)
+
+
+def test_parser_login_refuses_unconfigured_origin(monkeypatch):
+    from bot.miniapp import parser_auth
+    repo=Repository(); repo.bootstrap_owners({42})
+    monkeypatch.setattr(parser_auth,'request',lambda *args: {'ok':True,'stage':'idle'})
+    settings=Settings('offline-fixture-token',frozenset({42}),None,('testserver',))
+    with TestClient(create_app(settings),base_url='https://testserver') as client:
+        login=client.get('/miniapp')
+        assert client.post('/miniapp',data={'csrf':_csrf(login),'init_data':_init_data(settings.bot_token,42)},follow_redirects=False).status_code==303
+        page=client.get('/parser/telegram'); csrf=_csrf(page)
+        assert 'собственный HTTPS-адрес' in page.text and 'Номер телефона в международном формате' not in page.text
+        assert client.post('/parser/telegram/start',data={'csrf':csrf,'value':'+79991234567'}).status_code==403

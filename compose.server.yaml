@@ -1,0 +1,32 @@
+# Public HTTPS on the deployment server; the normal compose.yaml stays local.
+services:
+  bot:
+    environment:
+      ADMIN_MINIAPP_URL: "https://${ADMIN_DOMAIN:?Set ADMIN_DOMAIN}/miniapp"
+      ADMIN_ALLOWED_HOSTS: "localhost,127.0.0.1,${ADMIN_DOMAIN:?Set ADMIN_DOMAIN}"
+      TRUSTED_PROXY_IP: "${ADMIN_PROXY_ADDRESS:-172.29.240.2}"
+    networks: [default, admin-proxy]
+  https:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    environment:
+      ADMIN_DOMAIN: "${ADMIN_DOMAIN:?Set ADMIN_DOMAIN}"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - https_data:/data
+      - https_config:/config
+    depends_on: [bot]
+    networks:
+      admin-proxy:
+        ipv4_address: "${ADMIN_PROXY_ADDRESS:-172.29.240.2}"
+networks:
+  admin-proxy:
+    ipam:
+      config:
+        - subnet: "${ADMIN_PROXY_SUBNET:-172.29.240.0/24}"
+volumes:
+  https_data:
+  https_config:

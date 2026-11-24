@@ -91,7 +91,10 @@ def worker():
             return 1
         stop = threading.Event()
         pulse = threading.Thread(target=_pulse,args=(stop,),daemon=True)
+        login_server = None
         try:
+            from parsers.telegram_auth_service import start_login_server
+            login_server = start_login_server()
             collection.recover_interrupted()
             pulse.start()
             needs_recovery = False
@@ -128,6 +131,8 @@ def worker():
                     time.sleep(5)
         finally:
             stop.set()
+            if login_server:
+                login_server.close()
             lock.execute('SELECT pg_advisory_unlock(%s)', (174925602,))
             lock.commit()
 

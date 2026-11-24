@@ -3,9 +3,10 @@ import secrets
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlencode, urlsplit
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -13,7 +14,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.templating import Jinja2Templates
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from bot.miniapp import sessions
+from bot.miniapp import sessions, parser_auth
 from bot.miniapp.telegram_auth import TelegramAdminAuth
 from database.repository import Repository
 from database import collection
@@ -35,10 +36,31 @@ def create_app(settings):
     def render(request, name, **context):
         return templates.TemplateResponse(request=request, name=name, context={'session':getattr(request.state,'session',None), **context})
 
+    def denied(request, status_code):
+        return templates.TemplateResponse(request=request, name='access_denied.html', context={}, status_code=status_code)
+
+    @app.exception_handler(HTTPException)
+    async def http_error(request, exc):
+        if exc.status_code in (401,403):
+            return denied(request,exc.status_code)
+        return await http_exception_handler(request,exc)
+
     @app.middleware('http')
     async def security(request, call_next):
         request.state.session = await run_in_threadpool(sessions.get, request.cookies.get(COOKIE))
-        response = await call_next(request)
+        path, method = request.url.path, request.method
+        public = ((path == '/miniapp' and method in ('GET','POST')) or
+                  (path in ('/','/health') and method == 'GET') or
+                  (path.startswith('/static/') and method in ('GET','HEAD')))
+        if public:
+            response = await call_next(request)
+        else:
+            try:
+                owner(request)
+            except HTTPException as exc:
+                response = denied(request,exc.status_code)
+            else:
+                response = await call_next(request)
         response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' https://telegram.org; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors https://web.telegram.org"
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'no-referrer'
@@ -171,6 +193,37 @@ def create_app(settings):
         except (ValueError, PermissionError, OverflowError) as exc:
             raise HTTPException(400,str(exc)) from None
         return RedirectResponse(f'/clients/{user}',status_code=303)
+
+    def parser_login_allowed(request):
+        if not settings.miniapp_url:
+            return False
+        configured = urlsplit(settings.miniapp_url)
+        return configured.scheme == 'https' and str(request.base_url).rstrip('/') == f'{configured.scheme}://{configured.netloc}'
+
+    @app.get('/parser/telegram')
+    async def telegram_login_page(request: Request):
+        session = owner(request)
+        result = await run_in_threadpool(parser_auth.request,'status',session['telegram_id'])
+        notice = request.query_params.get('notice','')[:300]
+        login_allowed = parser_login_allowed(request)
+        return render(request,'parser_telegram.html',result=result,notice=notice,login_allowed=login_allowed)
+
+    @app.post('/parser/telegram/{action}')
+    async def telegram_login_action(request: Request, action: str):
+        session = owner(request)
+        if request.url.scheme != 'https':
+            raise HTTPException(403,'Для входа в Telegram требуется HTTPS.')
+        if action not in ('start','code','password','cancel'):
+            raise HTTPException(404,'Действие не найдено.')
+        if action != 'cancel' and not parser_login_allowed(request):
+            raise HTTPException(403,'Вход доступен только через настроенный собственный HTTPS-адрес.')
+        data = await form(request,max_bytes=4096)
+        csrf(request,data)
+        result = await run_in_threadpool(parser_auth.request,action,session['telegram_id'],data.get('value',''))
+        # The service returns only fixed, non-secret error messages.
+        notice = result.get('error','') if not result.get('ok') else ''
+        location = '/parser/telegram' + ('?' + urlencode({'notice':notice}) if notice else '')
+        return RedirectResponse(location,status_code=303)
 
     @app.get('/sources')
     def sources(request: Request):
