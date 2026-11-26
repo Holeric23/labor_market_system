@@ -108,6 +108,8 @@ def test_trial_delivery_filters_and_saved_cards():
         assert batch['number'] == expected
         client.finish_selection(user,batch['id'],'delivered',expected+123)
     assert client.status(user)['remaining'] == 0
+    with connect() as con:
+        con.execute('UPDATE clients SET manual_access=true WHERE telegram_id=%s',(user,))
     with pytest.raises(PermissionError): client.prepare_selection(user)
     client.select_filter(user,second)
     assert client.status(user)['remaining'] == 0
@@ -116,10 +118,11 @@ def test_trial_delivery_filters_and_saved_cards():
 def test_saved_vacancies_pagination():
     client=configure_documents(); user=810012
     onboarding(client,user); seed_vacancies(35)
+    Repository().set_manager(42,user,True)
     client.save_product_settings(42,5,'Стоимость согласовывается')
     client.draft(user,{},name='Все вакансии'); client.save_filter(user)
     for _ in range(7):
-        selection=client.prepare_selection(user,owner=True)
+        selection=client.prepare_selection(user)
         assert selection and len(selection['items']) == 5
         client.finish_selection(user,selection['id'],'delivered',123)
         for ordinal in range(1,6):
@@ -172,6 +175,29 @@ def test_one_time_activation_and_concurrent_redemption():
     Repository().set_manager(42,810007,False)
     with pytest.raises(ValueError): client.redeem_activation(first)
     with pytest.raises(PermissionError): Repository().set_manager(810007,810008,True)
+
+
+def test_staff_access_and_role_revocation():
+    repo=Repository(); repo.bootstrap_owners({42,812400}); repo.bootstrap_owners({42})
+    client=ClientRepository(); manager=812401; customer=812402
+    assert repo.staff_role(812400,{42}) is None and not client.can_issue(812400)
+    repo.set_manager(42,manager,True)
+    for user in (42,manager,customer): client.register(user)
+    seed_vacancies(2)
+    for user in (42,manager):
+        client.ready(user)
+        assert client.status(user)['staff']
+        client.draft(user,{},name='Тест'); client.save_filter(user)
+        selection=client.prepare_selection(user)
+        assert selection and not selection['trial']
+        client.finish_selection(user,selection['id'],'delivered',123)
+        with connect() as con:
+            assert con.execute('SELECT count(*) AS n FROM product_document_acceptances WHERE telegram_id=%s',(user,)).fetchone()['n'] == 0
+    with pytest.raises((ValueError,PermissionError)): client.ready(customer)
+    with pytest.raises(PermissionError): repo.managers(manager)
+    repo.set_manager(42,manager,False)
+    assert not client.can_issue(manager)
+    with pytest.raises((ValueError,PermissionError)): client.ready(manager)
 
 
 class FakeTelegramSession(BaseSession):
@@ -355,7 +381,7 @@ def test_bot_availability_and_admin_access():
     from aiogram.types import CallbackQuery, InlineQuery
     from test_product import _csrf, _init_data
     from bot.telegram import UNAVAILABLE
-    repo = Repository(); repo.bootstrap_owners({42})
+    repo = Repository(); repo.bootstrap_owners({42}); repo.set_manager(42,812403,True)
     settings = Settings('123456:fixture',frozenset({42}),'https://example.test/miniapp',('testserver',))
     app = create_app(settings)
     session = FakeTelegramSession(); bot = Bot(settings.bot_token,session=session)
@@ -366,6 +392,7 @@ def test_bot_availability_and_admin_access():
     async def feed():
         person=User(id=user,is_bot=False,first_name='Test')
         admin=User(id=42,is_bot=False,first_name='Owner')
+        manager=User(id=812403,is_bot=False,first_name='Manager')
         def msg(sender,text,index):
             return Update(update_id=index,message=Message(message_id=index,date=datetime.now(timezone.utc),chat=Chat(id=sender.id,type='private'),from_user=sender,text=text))
         await dp.feed_update(bot,msg(person,'/start',1))
@@ -376,9 +403,28 @@ def test_bot_availability_and_admin_access():
         await dp.feed_update(bot,Update(update_id=2,callback_query=CallbackQuery(id='cb',from_user=person,chat_instance='t',message=message,data='search')))
         assert session.callbacks[-1].show_alert and session.callbacks[-1].text == UNAVAILABLE
         await dp.feed_update(bot,Update(update_id=3,inline_query=InlineQuery(id='q',from_user=admin,query='30',offset='')))
-        assert session.inline[-1].results == []
+        assert len(session.inline[-1].results) == 1
         await dp.feed_update(bot,msg(admin,'/admin',4))
         assert session.sent[-1].reply_markup.inline_keyboard[0][0].web_app.url == 'https://example.test/miniapp'
+        await dp.feed_update(bot,msg(admin,'/start',5))
+        assert 'Доступ для команды открыт' in session.sent[-1].text
+        await dp.feed_update(bot,msg(manager,'/start',6))
+        assert 'Доступ для команды открыт' in session.sent[-1].text
+        before=len(session.sent)
+        await dp.feed_update(bot,msg(manager,'/admin',7))
+        assert len(session.sent)==before
+        message=Message(message_id=8,date=datetime.now(timezone.utc),chat=Chat(id=manager.id,type='private'),text='Menu')
+        await dp.feed_update(bot,Update(update_id=8,callback_query=CallbackQuery(id='mgr',from_user=manager,chat_instance='t',message=message,data='begin')))
+        assert '1 из 4' in session.sent[-1].text
+        await dp.feed_update(bot,Update(update_id=9,inline_query=InlineQuery(id='qm',from_user=manager,query='30',offset='')))
+        assert len(session.inline[-1].results)==1
+        repo.set_manager(42,manager.id,False)
+        await dp.feed_update(bot,msg(manager,'/start',10))
+        assert session.sent[-1].text==UNAVAILABLE
+    with TestClient(app,base_url='https://testserver') as manager_panel:
+        login=manager_panel.get('/miniapp')
+        response=manager_panel.post('/miniapp',data={'csrf':_csrf(login),'init_data':_init_data(settings.bot_token,812403)})
+        assert response.status_code==403 and manager_panel.get('/clients').status_code==401
     asyncio.run(feed())
     with TestClient(app,base_url='https://testserver') as client:
         assert client.post('/settings/bot',data={'action':'enable','revision':'0','csrf':'invalid'}).status_code==401

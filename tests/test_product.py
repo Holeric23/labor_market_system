@@ -27,14 +27,14 @@ def test_migration_is_repeatable_and_owner_gate_is_fail_closed():
     user = 700001
     identity = uuid.uuid4()
     repository.issue(42,user,30,identity)
-    assert repository.authorize(user,{42}) is None
+    assert repository.staff_role(user,{42}) is None
     with pytest.raises(PermissionError):
         repository.issue(999,user,30,uuid.uuid4())
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(lambda _: repository.activate(42,user,identity), range(2)))
     assert sorted(results) == [False,True]
     assert len([e for e in repository.client(42,user)['history'] if e['event_type']=='activated']) == 1
-    assert repository.authorize(user,{42}) is None  # Paid checks remain a later stage.
+    assert repository.staff_role(user,{42}) is None
 
 
 def test_manual_grants_extension_settings_and_audit():

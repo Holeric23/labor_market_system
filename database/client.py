@@ -33,8 +33,14 @@ def _documents(con, user):
 
 
 def _ready(con, user):
-    client = con.execute('SELECT * FROM clients WHERE telegram_id=%s', (user,)).fetchone()
-    if not client or client['status'] != 'active':
+    client = con.execute('''SELECT c.*,s.role AS staff_role FROM clients c
+        LEFT JOIN staff s ON s.telegram_id=c.telegram_id AND s.active
+        WHERE c.telegram_id=%s''', (user,)).fetchone()
+    if not client:
+        raise PermissionError('Доступ ограничен. Обратитесь в поддержку.')
+    if client['staff_role'] in ('owner','manager'):
+        return client
+    if client['status'] != 'active':
         raise PermissionError('Доступ ограничен. Обратитесь в поддержку.')
     docs = {d['kind']: d for d in _documents(con,user)}
     if any(kind not in docs for kind in REQUIRED):
@@ -221,14 +227,14 @@ class ClientRepository:
                 (token['grant_id'],user,user,Jsonb({'previous_until':previous.isoformat() if previous else None,'resulting_until':end.isoformat(),'issued_by':token['issued_by']})))
             return end
 
-    def status(self, user, owner=False):
+    def status(self, user):
         with connect() as con:
             client = _ready(con,user)
             used = con.execute("SELECT count(*) AS n FROM selections WHERE telegram_id=%s AND trial AND status='delivered'", (user,)).fetchone()['n']
             paid = con.execute('SELECT %s::timestamptz > now() AS paid', (client['access_until'],)).fetchone()['paid'] or False
-            return {'used':used, 'remaining':max(0,3-used), 'paid':paid, 'manual':client['manual_access'] or owner, 'until':client['access_until']}
+            return {'used':used, 'remaining':max(0,3-used), 'paid':paid, 'staff':bool(client['staff_role']), 'until':client['access_until']}
 
-    def prepare_selection(self, user, owner=False, request_message_id=None):
+    def prepare_selection(self, user, request_message_id=None):
         with connect() as con:
             con.execute('SELECT telegram_id FROM clients WHERE telegram_id=%s FOR UPDATE', (user,)).fetchone()
             client = _ready(con,user)
@@ -242,7 +248,7 @@ class ClientRepository:
                 raise ValueError('Предыдущая выдача ещё обрабатывается. Обратитесь в поддержку, если ожидание затянулось.')
             used = con.execute("SELECT count(*) AS n FROM selections WHERE telegram_id=%s AND trial AND status='delivered'", (user,)).fetchone()['n']
             paid = con.execute('SELECT %s::timestamptz > now() AS paid', (client['access_until'],)).fetchone()['paid'] or False
-            trial = not (paid or client['manual_access'] or owner)
+            trial = not (paid or client['staff_role'])
             if trial and used >= 3:
                 raise PermissionError('Бесплатные подборки закончились. Посмотрите стоимость доступа.')
             state = con.execute('SELECT * FROM client_interface_state WHERE telegram_id=%s', (user,)).fetchone()

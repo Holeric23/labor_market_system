@@ -102,16 +102,19 @@ class Repository:
         for identity in ids:
             _positive_id(identity)
         with connect() as con:
+            con.execute("UPDATE staff SET active=false WHERE role='owner' AND telegram_id <> ALL(%s)", (list(ids),))
             for identity in ids:
                 con.execute("INSERT INTO staff(telegram_id,role) VALUES (%s,'owner') ON CONFLICT (telegram_id) DO UPDATE SET role='owner',active=true", (identity,))
 
-    def authorize(self, telegram_id, configured_owners):
+    def staff_role(self, telegram_id, configured_owners):
         _positive_id(telegram_id)
-        if telegram_id in configured_owners:
-            return 'owner'
         with connect() as con:
-            row = con.execute('SELECT status,manual_access FROM clients WHERE telegram_id=%s', (telegram_id,)).fetchone()
-        return 'client' if row and row['status'] == 'active' and row['manual_access'] else None
+            row = con.execute('SELECT role FROM staff WHERE telegram_id=%s AND active', (telegram_id,)).fetchone()
+        if not row:
+            return None
+        if row['role'] == 'owner':
+            return 'owner' if telegram_id in configured_owners else None
+        return 'manager' if row['role'] == 'manager' else None
 
     def list_clients(self, actor):
         with connect() as con:
@@ -165,13 +168,6 @@ class Repository:
             row['grants'] = con.execute('SELECT * FROM access_grants WHERE recipient_id=%s ORDER BY issued_at DESC', (user,)).fetchall()
             row['history'] = con.execute('SELECT * FROM access_events WHERE recipient_id=%s ORDER BY id DESC', (user,)).fetchall()
             return row
-
-    def allow(self, actor, user, enabled):
-        _positive_id(user)
-        with connect() as con:
-            _owner(con, actor)
-            con.execute("INSERT INTO clients(telegram_id,status,manual_access) VALUES (%s,%s,%s) ON CONFLICT (telegram_id) DO UPDATE SET status=excluded.status,manual_access=excluded.manual_access,updated_at=now()", (user,'active' if enabled else 'blocked',enabled))
-            con.execute('INSERT INTO access_events(recipient_id,actor_id,event_type) VALUES (%s,%s,%s)', (user,actor,'manual_allow' if enabled else 'manual_block'))
 
     def issue(self, actor, user, days, identity):
         _positive_id(user)

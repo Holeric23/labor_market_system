@@ -42,9 +42,13 @@ class AvailabilityMiddleware(BaseMiddleware):
         self.ui = ui
 
     async def __call__(self, handler, event, data):
-        if isinstance(event, Message) and event.from_user and event.chat.type == 'private':
-            command = (event.text or '').split(maxsplit=1)
-            if event.chat.id == event.from_user.id and event.from_user.id in self.owner_ids and command and command[0].split('@')[0] == '/admin':
+        user = event.from_user if isinstance(event, (Message, CallbackQuery, InlineQuery)) else None
+        if user:
+            try:
+                role = await asyncio.to_thread(self.repository.staff_role,user.id,self.owner_ids)
+            except Exception:
+                role = None
+            if role in ('owner','manager'):
                 return await handler(event, data)
         try:
             available = await asyncio.to_thread(self.repository.bot_available)
@@ -174,12 +178,12 @@ def make_router(settings):
         await ui.menu(message,text,reply_markup=keyboard(rows))
 
     async def access(message, user):
-        value = await run(clients.status,user,user in settings.owner_ids)
+        value = await run(clients.status,user)
         config = await run(clients.settings)
         if value['paid']:
             description = 'Доступ активен до ' + value['until'].strftime('%d.%m.%Y %H:%M UTC') + '.'
-        elif value['manual']:
-            description = 'Доступ открыт администратором.'
+        elif value['staff']:
+            description = 'Доступ открыт для команды.'
         else:
             description = f"Осталось бесплатных подборок: {value['remaining']} из 3."
         description += '\n\n' + (config['pricing_text'] or 'Стоимость доступа уточняйте у менеджера.')
@@ -211,7 +215,7 @@ def make_router(settings):
 
     async def search(message, user):
         try:
-            selection = await run(clients.prepare_selection,user,user in settings.owner_ids,message.message_id)
+            selection = await run(clients.prepare_selection,user,message.message_id)
         except PermissionError:
             await access(message,user)
             return
@@ -260,6 +264,9 @@ def make_router(settings):
             except ValueError as exc:
                 await ui.menu(message,str(exc),reply_markup=await contact_keyboard())
             return
+        if await run(repository.staff_role,message.from_user.id,settings.owner_ids):
+            await ui.menu(message,'Привет, это ПРОЩЕ. Доступ для команды открыт.',reply_markup=home_keyboard())
+            return
         await ui.menu(message,'Привет, это ПРОЩЕ. Помогу найти вакансии по твоему направлению. Первые три подборки бесплатные.',
             reply_markup=keyboard([[button('Начать','begin')],[button('Как это работает','how')],[button('Документы и помощь','documents')]]))
 
@@ -295,19 +302,6 @@ def make_router(settings):
             await ui.menu(message,'Админ-панель пока не настроена.')
             return
         await ui.menu(message,'Управление системой:',reply_markup=keyboard([[{'text':'Открыть админ-панель','web_app':WebAppInfo(url=settings.miniapp_url)}]]))
-
-    @router.message(Command('allow','deny'))
-    async def set_access(message):
-        if not private(message,message.from_user) or message.from_user.id not in settings.owner_ids:
-            return
-        parts = (message.text or '').split()
-        try:
-            if len(parts) != 2:
-                raise ValueError('Укажите Telegram ID.')
-            await run(repository.allow,message.from_user.id,int(parts[1]),parts[0].split('@')[0] == '/allow')
-            await ui.menu(message,'Доступ обновлён.')
-        except ValueError as exc:
-            await ui.menu(message,str(exc))
 
     @router.callback_query()
     async def callback(query):
