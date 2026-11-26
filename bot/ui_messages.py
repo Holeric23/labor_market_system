@@ -1,4 +1,4 @@
-"""Keep one temporary private-chat menu while preserving delivered vacancies."""
+"""Keep one current interface message per private chat."""
 import asyncio
 import contextvars
 import logging
@@ -32,7 +32,7 @@ class UIMessageManager(BaseMiddleware):
             lock = asyncio.Lock()
             self._locks[chat_id] = lock
         async with lock:
-            interaction = {'sent': False}
+            interaction = {'sent': False, 'clicked': event.message.message_id if isinstance(event, CallbackQuery) else None}
             token = self._interaction.set(interaction)
             try:
                 return await handler(event, data)
@@ -57,7 +57,7 @@ class UIMessageManager(BaseMiddleware):
             # Deleted, too old, or inaccessible messages must not block navigation.
             logger.debug('Could not delete temporary Telegram message: %s',type(exc).__name__)
 
-    async def _send(self, message, text, persistent, **kwargs):
+    async def _send(self, message, text, **kwargs):
         sent = await message.answer(text,**kwargs)
         interaction = self._interaction.get()
         if interaction is not None:
@@ -65,17 +65,20 @@ class UIMessageManager(BaseMiddleware):
         if message.chat.type != 'private':
             return sent
         try:
-            previous = await asyncio.to_thread(self._swap,message.chat.id,None if persistent else sent.message_id)
+            previous = await asyncio.to_thread(self._swap,message.chat.id,sent.message_id)
         except Exception as exc:
             # A bookkeeping failure must never turn a delivered selection into a failed one.
             logger.warning('Could not track Telegram interface message: %s',type(exc).__name__)
             return sent
         if previous and previous != sent.message_id:
             await self._delete(message.bot,message.chat.id,previous)
+        clicked = interaction['clicked'] if interaction else None
+        if clicked and clicked not in (previous, sent.message_id):
+            await self._delete(message.bot,message.chat.id,clicked)
         return sent
 
     async def menu(self, message, text, **kwargs):
-        return await self._send(message,text,False,**kwargs)
+        return await self._send(message,text,**kwargs)
 
     async def delivery(self, message, text, **kwargs):
-        return await self._send(message,text,True,**kwargs)
+        return await self._send(message,text,**kwargs)

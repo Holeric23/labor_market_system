@@ -113,6 +113,39 @@ def test_trial_delivery_filters_and_saved_cards():
     assert client.status(user)['remaining'] == 0
 
 
+def test_saved_vacancies_pagination():
+    client=configure_documents(); user=810012
+    onboarding(client,user); seed_vacancies(35)
+    client.save_product_settings(42,5,'Стоимость согласовывается')
+    client.draft(user,{},name='Все вакансии'); client.save_filter(user)
+    for _ in range(7):
+        selection=client.prepare_selection(user,owner=True)
+        assert selection and len(selection['items']) == 5
+        client.finish_selection(user,selection['id'],'delivered',123)
+        for ordinal in range(1,6):
+            client.mark(user,selection['id'],ordinal,'save')
+    pages=[client.saved(user,page) for page in range(4)]
+    assert [len(page) for page in pages] == [11,11,11,5]
+    identities=[item['id'] for page in pages for item in page[:10]]
+    assert len(identities)==35 and len(set(identities))==35
+    with pytest.raises(ValueError): client.saved(user,-1)
+    with connect() as con: con.execute('UPDATE app_settings SET customer_bot_enabled=true WHERE singleton=true')
+    settings=Settings('123456:fixture',frozenset({42}),None,('testserver',))
+    session=FakeTelegramSession(); bot=Bot(settings.bot_token,session=session)
+    dp=Dispatcher(); dp.include_router(make_router(settings))
+    async def check_navigation():
+        from aiogram.types import CallbackQuery
+        person=User(id=user,is_bot=False,first_name='Test')
+        for index,data in enumerate(('saved','saved:1','saved:3'),1):
+            msg=Message(message_id=500+index,date=datetime.now(timezone.utc),chat=Chat(id=user,type='private'),text='Меню')
+            query=CallbackQuery(id=str(index),from_user=person,chat_instance='fixture',message=msg,data=data)
+            await dp.feed_update(bot,Update(update_id=index,callback_query=query))
+            assert f'страница {1 if index == 1 else 2 if index == 2 else 4}' in session.sent[-1].text
+            actions=[button.callback_data for row in session.sent[-1].reply_markup.inline_keyboard for button in row]
+            assert ('saved:4' not in actions) if index == 3 else ('saved:'+str(index) in actions)
+    asyncio.run(check_navigation())
+
+
 def test_one_time_activation_and_concurrent_redemption():
     client = configure_documents(); first, second = 810004, 810005
     onboarding(client,first); onboarding(client,second)
@@ -205,7 +238,7 @@ def test_telegram_buttons_connected_to_database():
     asyncio.run(run())
 
 
-def test_temporary_navigation_preserves_delivered_vacancies():
+def test_single_page_navigation_and_saved_vacancies():
     from aiogram.types import CallbackQuery
     client = configure_documents(); user=810010
     onboarding(client,user); seed_vacancies(2)
@@ -235,17 +268,44 @@ def test_temporary_navigation_preserves_delivered_vacancies():
         card_data=session.sent[-1].reply_markup.inline_keyboard[0][0].callback_data
         await click(card_data,104,selection)
         card=10000+len(session.sent)
-        await click('home',105,card)
-        menu=10000+len(session.sent)
-        assert (user,selection) not in session.deleted and (user,card) not in session.deleted
-        await click('filters',106,menu)
-        final_menu=10000+len(session.sent)
-        assert (user,menu) in session.deleted and (user,selection) not in session.deleted
-        # A new dispatcher simulates a restart: the last temporary message remains tracked.
+        assert (user,selection) in session.deleted
+        save_data=next(button.callback_data for row in session.sent[-1].reply_markup.inline_keyboard for button in row if button.text == 'Сохранить вакансию')
+        await click(save_data,105,card)
+        saved_card=10000+len(session.sent)
+        assert (user,card) in session.deleted and len(client.saved(user)) == 1
+        assert any(button.text == 'Убрать из сохранённого' for row in session.sent[-1].reply_markup.inline_keyboard for button in row)
+        await click('saved',106,saved_card)
+        saved_page=10000+len(session.sent)
+        assert (user,saved_card) in session.deleted and 'Сохранённые вакансии' in session.sent[-1].text
+        assert any(button.callback_data == card_data for row in session.sent[-1].reply_markup.inline_keyboard for button in row)
         restarted=Dispatcher(); restarted.include_router(make_router(settings))
-        await command('/start',107,restarted)
-        assert (user,final_menu) in session.deleted and (user,107) in session.deleted
-        assert (user,selection) not in session.deleted and (user,card) not in session.deleted
+        await command('/start',112,restarted)
+        assert len(client.saved(user)) == 1
+        await click('saved',113,10000+len(session.sent))
+        saved_page=10000+len(session.sent)
+        await click(card_data,107,saved_page)
+        reopened=10000+len(session.sent)
+        unsave_data=next(button.callback_data for row in session.sent[-1].reply_markup.inline_keyboard for button in row if button.text == 'Убрать из сохранённого')
+        await click(unsave_data,108,reopened)
+        assert not client.saved(user)
+        unsaved_card=10000+len(session.sent)
+        await click('home',109,unsaved_card)
+        final_menu=10000+len(session.sent)
+        assert (user,unsaved_card) in session.deleted
+        # A new dispatcher simulates a restart: the last page remains tracked.
+        restarted=Dispatcher(); restarted.include_router(make_router(settings))
+        await command('/start',110,restarted)
+        assert (user,final_menu) in session.deleted and (user,110) in session.deleted
+        # A click on an old untracked card is removed as well as the current page.
+        current=10000+len(session.sent)
+        await click('home',111,9999)
+        assert (user,current) in session.deleted and (user,9999) in session.deleted
+        from aiogram.types import PhotoSize
+        photo=Message(message_id=114,date=datetime.now(timezone.utc),chat=Chat(id=user,type='private'),from_user=person,
+                      photo=[PhotoSize(file_id='photo',file_unique_id='photo',width=10,height=10)])
+        previous=10000+len(session.sent)
+        await dp.feed_update(bot,Update(update_id=114,message=photo))
+        assert (user,114) in session.deleted and (user,previous) in session.deleted
         with connect() as con:
             assert con.execute("SELECT count(*) AS n FROM selections WHERE telegram_id=%s AND status='delivered'",(user,)).fetchone()['n']==1
     asyncio.run(exercise())

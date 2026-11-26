@@ -1,6 +1,5 @@
 """Mini App: owner-only administration, with no public vacancy catalogue."""
 import secrets
-import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlsplit
@@ -146,19 +145,7 @@ def create_app(settings):
     @app.get('/clients')
     def clients(request: Request):
         session = owner(request)
-        return render(request,'clients.html',clients=repository.list_clients(session['telegram_id']),operation_id=str(uuid.uuid4()),settings=repository.public_settings())
-
-    @app.post('/clients/issue')
-    async def issue(request: Request):
-        session = owner(request)
-        data = await form(request)
-        csrf(request,data)
-        try:
-            user, days = int(data.get('telegram_id','')), int(data.get('days',''))
-            await run_in_threadpool(repository.issue,session['telegram_id'],user,days,data.get('operation_id',''))
-        except (ValueError, PermissionError, OverflowError) as exc:
-            raise HTTPException(400,str(exc)) from None
-        return RedirectResponse(f'/clients/{user}',status_code=303)
+        return render(request,'clients.html',clients=repository.list_clients(session['telegram_id']))
 
     @app.get('/clients/{user}')
     def client(request: Request, user: int):
@@ -171,7 +158,7 @@ def create_app(settings):
             raise HTTPException(404,'Клиент не найден.')
         item['active'] = bool(item['access_until'] and item['access_until'] > datetime.now(timezone.utc))
         item['last_access_event'] = next((event for event in item['history'] if event['event_type'] in ('activated','revoked','reverted')),None)
-        return render(request,'client.html',client=item,operation_id=str(uuid.uuid4()),settings=repository.public_settings())
+        return render(request,'client.html',client=item)
 
     @app.post('/clients/{user}/{action}')
     async def client_action(request: Request, user: int, action: str):

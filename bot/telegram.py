@@ -203,7 +203,7 @@ def make_router(settings):
         if item['source_url'] and item['source_url'].startswith('https://'):
             rows.append([link('Оригинал',item['source_url'])])
         key = identity.hex
-        rows.append([button('Убрать из сохранённого' if item['saved'] else 'Сохранить',f"mark:{'unsave' if item['saved'] else 'save'}:{key}:{ordinal}")])
+        rows.append([button('Убрать из сохранённого' if item['saved'] else 'Сохранить вакансию',f"mark:{'unsave' if item['saved'] else 'save'}:{key}:{ordinal}")])
         rows.append([button('Не подходит',f'reason:{key}:{ordinal}'),button('Уже откликнулся',f'mark:applied:{key}:{ordinal}')])
         rows.append([button('К подборке',f'selection:{key}'),button('Сохранённое','saved')])
         rows.append([button('Главное меню','home')])
@@ -435,11 +435,17 @@ def make_router(settings):
                 await search(message,user)
             elif data == 'access':
                 await access(message,user)
-            elif data == 'saved':
-                items = await run(clients.saved,user)
-                rows = [[button(item['text'].splitlines()[0][:60] or 'Вакансия',f"card:{item['selection_id'].hex}:{item['ordinal']}")] for item in items]
+            elif data == 'saved' or data.startswith('saved:'):
+                page = int(data.split(':')[1]) if ':' in data else 0
+                items = await run(clients.saved,user,page)
+                rows = [[button(next((line.strip() for line in item['text'].splitlines() if line.strip()),'Вакансия')[:60],f"card:{item['selection_id'].hex}:{item['ordinal']}")] for item in items[:10]]
+                navigation = []
+                if page > 0: navigation.append(button('← Назад',f'saved:{page-1}'))
+                if len(items) > 10: navigation.append(button('Далее →',f'saved:{page+1}'))
+                if navigation: rows.append(navigation)
                 rows.append([button('Главное меню','home')])
-                await ui.menu(message,'Сохранённые вакансии:' if items else 'Пока нет сохранённых вакансий.',reply_markup=keyboard(rows))
+                text = f'Сохранённые вакансии · страница {page+1}:' if items else ('На этой странице вакансий больше нет.' if page else 'Пока нет сохранённых вакансий.')
+                await ui.menu(message,text,reply_markup=keyboard(rows))
             elif data.startswith('card:'):
                 _,key,ordinal = data.split(':'); await card(message,user,uuid.UUID(hex=key),int(ordinal))
             elif data.startswith('selection:'):
@@ -461,6 +467,8 @@ def make_router(settings):
             elif data.startswith('mark:'):
                 _,action,key,ordinal = data.split(':'); identity=uuid.UUID(hex=key)
                 await run(clients.mark,user,identity,int(ordinal),action)
+                if action in ('save','unsave'):
+                    await card(message,user,identity,int(ordinal)); return
                 text = {'save':'Вакансия сохранена.','unsave':'Вакансия убрана из сохранённого.','applied':'Отметили, что вы откликнулись.'}[action]
                 rows = [[button('К вакансии',f'card:{key}:{ordinal}')]]
                 rows.append([button('Главное меню','home')])
@@ -501,5 +509,11 @@ def make_router(settings):
                 await home(message)
         except (ValueError,PermissionError,TypeError) as exc:
             await ui.menu(message,str(exc) or 'Не удалось обработать ответ.',reply_markup=keyboard([[button('Назад','filter:edit')]]))
+
+    @router.message()
+    async def other_input(message):
+        if not private(message,message.from_user):
+            return
+        await ui.menu(message,'Пожалуйста, используйте кнопки меню.',reply_markup=keyboard([[button('Главное меню','home')]]))
 
     return router

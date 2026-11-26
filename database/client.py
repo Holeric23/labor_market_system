@@ -310,13 +310,21 @@ class ClientRepository:
             column = {'save':'saved','unsave':'saved','hide':'hidden','applied':'applied'}[action]
             con.execute(f'UPDATE client_vacancies SET {column}=%s,reason=COALESCE(%s,reason),updated_at=now() WHERE telegram_id=%s AND content_id=%s', (action != 'unsave',reason,user,row['content_id']))
 
-    def saved(self, user):
+    def saved(self, user, page=0, page_size=10):
+        if type(page) is not int or page < 0 or page > 1000000 or type(page_size) is not int or not 1 <= page_size <= 30:
+            raise ValueError('Некорректная страница сохранённых вакансий.')
         with connect() as con:
             _ready(con,user)
-            return con.execute('''SELECT DISTINCT ON (c.id) c.id,c.text,s.id AS selection_id,si.ordinal
+            return con.execute('''SELECT c.id,c.text,selected.selection_id,selected.ordinal
               FROM client_vacancies cv JOIN contents c ON c.id=cv.content_id
-              JOIN selection_items si ON si.content_id=c.id JOIN selections s ON s.id=si.selection_id AND s.telegram_id=cv.telegram_id
-              WHERE cv.telegram_id=%s AND cv.saved AND s.status='delivered' ORDER BY c.id,s.created_at DESC LIMIT 30''', (user,)).fetchall()
+              JOIN LATERAL (
+                SELECT s.id AS selection_id,si.ordinal FROM selection_items si
+                JOIN selections s ON s.id=si.selection_id
+                WHERE si.content_id=c.id AND s.telegram_id=cv.telegram_id AND s.status='delivered'
+                ORDER BY s.created_at DESC,s.id DESC LIMIT 1
+              ) selected ON true
+              WHERE cv.telegram_id=%s AND cv.saved ORDER BY cv.updated_at DESC,c.id DESC LIMIT %s OFFSET %s''',
+              (user,page_size+1,page*page_size)).fetchall()
 
     def settings(self):
         with connect() as con:

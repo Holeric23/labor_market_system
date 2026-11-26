@@ -182,7 +182,10 @@ def test_miniapp_signature_csrf_admin_routes_and_replay():
         assert client.post('/miniapp',data={'csrf':_csrf(page),'init_data':raw},follow_redirects=False).status_code == 303
         page = client.get('/clients')
         assert page.status_code == 200
-        assert client.post('/clients/issue',data={'csrf':'wrong'}).status_code == 403
+        assert 'Как выдать доступ' not in page.text and '@имя_бота' not in page.text
+        assert 'name="telegram_id"' not in page.text and '/clients/issue' not in page.text
+        assert client.post('/clients/issue',data={'csrf':'wrong'}).status_code in (404,405)
+        assert client.post('/settings/bot',data={'csrf':'wrong'}).status_code == 403
         assert client.get('/sources').status_code == 200
         assert client.get('/settings').status_code == 200
         assert client.get('/catalog').status_code == 404
