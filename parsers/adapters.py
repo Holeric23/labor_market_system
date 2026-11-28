@@ -16,12 +16,16 @@ async def batches(source, mode):
     for key,(low,high) in limits.items():
         if type(parameters[key]) is not int or not low <= parameters[key] <= high:
             raise ValueError('Некорректный параметр источника: '+key)
-    state = dict(source['cursor'])
+    state = {} if source['kind'] == 'telegram' else dict(source['cursor'])
     cursor = {'source':state, 'seen':0}
     if source['kind'] == 'telegram':
+        mode = 'history'
+        # A run covers the whole fresh window, not just a fixed number of posts.
+        parameters['max_items'] = 2**63-1
         from telethon import TelegramClient
         from market_system.paths import STATE_DIR
         from market_system.core.parsers.telegram.telegram_parser import TelegramParser
+        from parsers.session_guard import session_guard
         api_id, api_hash = os.environ.get('TELEGRAM_API_ID',''), os.environ.get('TELEGRAM_API_HASH','')
         if not api_id or not api_hash:
             raise ValueError('Не настроены TELEGRAM_API_ID и TELEGRAM_API_HASH')
@@ -32,15 +36,16 @@ async def batches(source, mode):
                       cutoff=(datetime.now(timezone.utc)-timedelta(days=parameters['overlap_days'])).isoformat(),
                       freshness_cutoff=source['freshness_cutoff'])
         parser = TelegramParser({source['name']:source['address']},use_proxy=False,session_name=str(session))
-        client = TelegramClient(str(session),int(api_id),api_hash,timeout=30,connection_retries=2)
-        try:
-            await client.connect()
-            if not await client.is_user_authorized():
-                raise ValueError('Telegram-сессия парсера не авторизована')
-            async for batch in parser.managed_batches(client,source['name'],source['address'],mode,cursor,parameters):
-                yield batch
-        finally:
-            await client.disconnect()
+        with session_guard():
+            client = TelegramClient(str(session),int(api_id),api_hash,timeout=30,connection_retries=2)
+            try:
+                await client.connect()
+                if not await client.is_user_authorized():
+                    raise ValueError('Telegram-сессия парсера не авторизована')
+                async for batch in parser.managed_batches(client,source['name'],source['address'],mode,cursor,parameters):
+                    yield batch
+            finally:
+                await client.disconnect()
     elif source['kind'] == 'designhunters':
         from market_system.core.parsers.designhunters.designhunters_parser import DesignHuntersParser
         cursor['index'] = state.get('history_index',0) if mode == 'history' else state.get('regular_index',0)

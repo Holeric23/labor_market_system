@@ -135,13 +135,13 @@ def test_parser_telegram_login_panel_owner_csrf_and_secret_handling(monkeypatch)
         assert client.post('/parser/telegram/start',data={'csrf':'bad','value':'+79991234567'}).status_code==403
         result=client.post('/parser/telegram/start',data={'csrf':csrf,'value':'+79991234567'},follow_redirects=False)
         assert result.status_code==303 and '+7999' not in result.headers['location']
-        page=client.get('/parser/telegram'); assert 'Код Telegram' in page.text and '+7999' not in page.text
+        page=client.get('/parser/telegram'); assert 'Код подтверждения' in page.text and '+7999' not in page.text
         result=client.post('/parser/telegram/code',data={'csrf':csrf,'value':'12345'},follow_redirects=False)
         assert result.status_code==303 and '12345' not in result.headers['location']
-        page=client.get('/parser/telegram'); assert 'Пароль двухэтапной защиты' in page.text
+        page=client.get('/parser/telegram'); assert 'Двухэтапная защита' in page.text
         result=client.post('/parser/telegram/password',data={'csrf':csrf,'value':'secret-password'},follow_redirects=False)
         assert result.status_code==303 and 'secret-password' not in result.headers['location']
-        page=client.get('/parser/telegram'); assert 'сессии парсера сохранён' in page.text and 'secret-password' not in page.text
+        page=client.get('/parser/telegram'); assert 'Сессия сохранена' in page.text and 'secret-password' not in page.text
         assert all(actor==42 for _,actor,_ in calls)
 
 
@@ -154,5 +154,5 @@ def test_parser_login_refuses_unconfigured_origin(monkeypatch):
         login=client.get('/miniapp')
         assert client.post('/miniapp',data={'csrf':_csrf(login),'init_data':_init_data(settings.bot_token,42)},follow_redirects=False).status_code==303
         page=client.get('/parser/telegram'); csrf=_csrf(page)
-        assert 'собственный HTTPS-адрес' in page.text and 'Номер телефона в международном формате' not in page.text
+        assert 'собственный HTTPS-адрес' in page.text and 'name="value"' not in page.text
         assert client.post('/parser/telegram/start',data={'csrf':csrf,'value':'+79991234567'}).status_code==403

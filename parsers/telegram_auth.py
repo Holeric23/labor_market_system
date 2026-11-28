@@ -1,9 +1,11 @@
 """Short-lived, owner-scoped Telegram login; secrets never enter PostgreSQL."""
 import asyncio
+import json
 import os
 import re
 import secrets
 from pathlib import Path
+from parsers.session_guard import session_guard, SessionBusyError
 
 
 class LoginError(Exception):
@@ -19,6 +21,36 @@ class TelegramLogin:
         self.lock = asyncio.Lock()
         self.active = None
         self.expiry_task = None
+        self.checked = None
+
+    def _metadata(self):
+        path = self.session_file.with_suffix('.meta.json')
+        if not path.exists():
+            return {'owner':None,'private':False}
+        try:
+            data = json.loads(path.read_text(encoding='utf-8'))
+            if set(data) != {'owner','private'} or type(data['private']) is not bool or (data['owner'] is not None and (type(data['owner']) is not int or data['owner'] <= 0)) or (data['private'] and data['owner'] is None):
+                raise ValueError()
+            return data
+        except (OSError,ValueError,TypeError):
+            raise LoginError('Не удалось проверить права на аккаунт парсера.') from None
+
+    def _write_metadata(self, data):
+        path = self.session_file.with_suffix('.meta.json')
+        temporary = path.with_name('.account-'+secrets.token_hex(16)+'.tmp')
+        try:
+            temporary.write_text(json.dumps(data),encoding='utf-8')
+            try: temporary.chmod(0o600)
+            except OSError: pass
+            os.replace(temporary,path)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    def _access(self, actor):
+        metadata = self._metadata()
+        if metadata['private'] and metadata['owner'] != actor:
+            raise LoginError('Этот аккаунт доступен только владельцу сессии.')
+        return metadata
 
     def _make_client(self, path):
         if self.client_factory:
@@ -77,9 +109,12 @@ class TelegramLogin:
             self._owner(actor)
             if self.active:
                 return {'stage':self.active['stage']}
-            return {'stage':'session_present' if self.session_file.is_file() else 'idle'}
+            if not self.session_file.is_file():
+                return {'stage':'idle'}
+            metadata = self._access(actor)
+            return {'stage':'session_present','private':metadata['private'],'checked':self.checked}
 
-    async def start(self, actor, phone):
+    async def start(self, actor, phone, private=False):
         async with self.lock:
             self._owner(actor)
             if self.active:
@@ -97,7 +132,7 @@ class TelegramLogin:
                 self.session_file.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
                 path = self.session_file.parent / ('.login-'+secrets.token_hex(16)+'.session')
                 client = self._make_client(path)
-                self.active = {'owner':actor,'client':client,'path':path,'phone':phone,'stage':'starting','marker':secrets.token_hex(16)}
+                self.active = {'owner':actor,'client':client,'path':path,'phone':phone,'private':bool(private),'stage':'starting','marker':secrets.token_hex(16)}
                 self.expiry_task = asyncio.create_task(self._expire(self.active['marker']))
                 await client.connect()
                 if path.exists():
@@ -124,10 +159,18 @@ class TelegramLogin:
     async def _finish(self):
         active = self.active
         try:
+            if not await active['client'].is_user_authorized():
+                raise LoginError('Вход не завершён. Начните авторизацию заново.')
             await active['client'].disconnect()
             # An exclusive link cannot overwrite an existing session, even if
             # another process creates it between the existence check and save.
-            os.link(active['path'],self.session_file)
+            with session_guard():
+                os.link(active['path'],self.session_file)
+                try:
+                    self._write_metadata({'owner':active['owner'],'private':active['private']})
+                except Exception:
+                    self.session_file.unlink(missing_ok=True)
+                    raise
         except FileExistsError:
             await self._clear()
             raise LoginError('Файл сессии уже появился; существующая сессия сохранена.') from None
@@ -137,10 +180,65 @@ class TelegramLogin:
         try: active['path'].unlink(missing_ok=True)
         except OSError: pass
         self.active = None
+        self.checked = {'authorized':True}
         if self.expiry_task:
             self.expiry_task.cancel()
             self.expiry_task = None
         return {'stage':'session_present'}
+
+    async def check(self, actor):
+        async with self.lock:
+            self._owner(actor)
+            self._access(actor)
+            if not self.session_file.is_file():
+                raise LoginError('Аккаунт ещё не подключён.')
+            try:
+                with session_guard():
+                    client = self._make_client(self.session_file)
+                    try:
+                        await client.connect()
+                        authorized = await client.is_user_authorized()
+                        account = await client.get_me() if authorized else None
+                        self.checked = {'authorized':bool(authorized),'name':getattr(account,'first_name',None),
+                                        'username':getattr(account,'username',None)}
+                    finally:
+                        await client.disconnect()
+            except SessionBusyError as exc:
+                raise LoginError(str(exc)) from None
+            except Exception:
+                self.checked = None
+                raise LoginError('Не удалось проверить аккаунт. Проверьте соединение с Telegram.') from None
+            return {'stage':'session_present','checked':self.checked}
+
+    async def privacy(self, actor, value):
+        async with self.lock:
+            self._owner(actor)
+            metadata = self._access(actor)
+            if not self.session_file.is_file() or value not in ('private','shared'):
+                raise LoginError('Некорректное изменение доступа к аккаунту.')
+            if value == 'private' and metadata['owner'] not in (None,actor):
+                raise LoginError('Личным аккаунт может сделать только добавивший его владелец.')
+            self._write_metadata({'owner':metadata['owner'] or actor,'private':value == 'private'})
+            return {'stage':'session_present'}
+
+    async def remove(self, actor):
+        async with self.lock:
+            self._owner(actor)
+            self._access(actor)
+            if not self.session_file.is_file():
+                raise LoginError('Аккаунт уже отключён.')
+            try:
+                with session_guard():
+                    self.session_file.unlink()
+                    self.session_file.with_suffix('.meta.json').unlink(missing_ok=True)
+                    for suffix in ('-journal','-wal','-shm'):
+                        Path(str(self.session_file)+suffix).unlink(missing_ok=True)
+            except SessionBusyError as exc:
+                raise LoginError(str(exc)) from None
+            except OSError:
+                raise LoginError('Не удалось отключить аккаунт. Проверьте доступ к папке state.') from None
+            self.checked = None
+            return {'stage':'idle'}
 
     async def code(self, actor, value):
         async with self.lock:

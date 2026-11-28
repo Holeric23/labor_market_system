@@ -11,7 +11,7 @@ from database.connection import connect
 from database.migrate import migrate
 from database import collection
 from parsers.adapters import batches
-from parsers.storage import store_batch
+from parsers.storage import store_batch, stage_batch, staged_batch, discard_staged
 
 
 async def run_source(source, mode, inference, job_id=None):
@@ -31,18 +31,22 @@ async def run_source(source, mode, inference, job_id=None):
         if job_id is not None:
             con.execute("UPDATE collection_jobs SET parser_run_id=%s WHERE id=%s AND status='running'", (run_id,job_id))
     total = 0
+    cursor = {'source':dict(source['cursor'])}
     try:
         if collection.is_cancelled(job_id):
             raise ValueError('Сбор отменён')
         async for batch in batches(source,mode):
             if collection.is_cancelled(job_id):
                 raise ValueError('Сбор отменён')
-            total += store_batch(source,run_id,batch,inference)
+            stage_batch(source,run_id,batch)
+            cursor = batch.cursor
         if collection.is_cancelled(job_id):
             raise ValueError('Сбор отменён')
-        with connect() as con:
-            con.execute("UPDATE parser_runs SET state='succeeded',finished_at=now(),inserted_count=%s WHERE id=%s", (total,run_id))
-            con.execute("UPDATE sources SET last_success_at=now(),next_run_at=now()+(interval_seconds * interval '1 second') WHERE id=%s AND revision=%s", (source['id'],source['revision']))
+        total = store_batch(source,run_id,staged_batch(run_id,cursor),inference,job_id)
+        if job_id is None:
+            with connect() as con:
+                con.execute("UPDATE parser_runs SET state='succeeded',finished_at=now(),inserted_count=%s WHERE id=%s", (total,run_id))
+                con.execute("UPDATE sources SET last_success_at=now(),next_run_at=now()+(interval_seconds * interval '1 second') WHERE id=%s AND revision=%s", (source['id'],source['revision']))
         try:
             collection.cleanup()
         except Exception as exc:
@@ -58,12 +62,27 @@ async def run_source(source, mode, inference, job_id=None):
                        'Telegram-сессия парсера не авторизована',
                        'Run history collection once before regular Telegram collection',
                        'Настройки источника изменились во время запуска', 'Сбор отменён'}
-        error = str(exc) if isinstance(exc,ValueError) and str(exc) in safe_errors else type(exc).__name__
+        explanations = {
+            'AuthKeyUnregisteredError':'Сессия Telegram больше не действует. Подключите аккаунт заново.',
+            'SessionRevokedError':'Сессия Telegram отозвана. Подключите аккаунт заново.',
+            'SessionPasswordNeededError':'Для аккаунта требуется дополнительный пароль. Повторите вход в панели.',
+            'ChannelPrivateError':'Нет доступа к этому Telegram-каналу с подключённого аккаунта.',
+            'UsernameNotOccupiedError':'Telegram-канал не найден. Проверьте адрес источника.',
+            'FloodWaitError':'Telegram временно ограничил запросы. Попробуйте позже.',
+            'TimeoutError':'Telegram не ответил вовремя. Проверьте соединение.',
+            'SessionBusyError':'Аккаунт Telegram сейчас занят другим действием. Попробуйте позже.',
+        }
+        error = str(exc) if isinstance(exc,ValueError) and str(exc) in safe_errors else explanations.get(type(exc).__name__,type(exc).__name__)
         logging.error('Parser failed: %s',error)
         with connect() as con:
             con.execute("UPDATE parser_runs SET state='failed',finished_at=now(),inserted_count=%s,error=%s WHERE id=%s", (total,error,run_id))
             con.execute("UPDATE sources SET next_run_at=now()+(interval_seconds * interval '1 second') WHERE id=%s AND revision=%s", (source['id'],source['revision']))
         return False
+    finally:
+        try:
+            discard_staged(run_id)
+        except Exception:
+            logging.exception('Could not remove staged collection data')
 
 
 def _job_error(job_id):

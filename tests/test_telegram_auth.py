@@ -24,9 +24,11 @@ class FakeTelegram:
     code_expired = False
     def __init__(self, path):
         self.path = Path(path)
-        self.path.write_text('staged session',encoding='utf-8')
+        if not self.path.exists(): self.path.write_text('staged session',encoding='utf-8')
         self.disconnected = False
     async def connect(self): pass
+    async def is_user_authorized(self): return self.path.read_text(encoding='utf-8') == 'authorized session'
+    async def get_me(self): return SimpleNamespace(first_name='Test',username='test_account')
     async def disconnect(self): self.disconnected=True
     async def send_code_request(self, phone): return SimpleNamespace(phone_code_hash='private-hash')
     async def sign_in(self, phone=None, code=None, phone_code_hash=None, password=None):
@@ -130,4 +132,36 @@ def test_constructor_failure_removes_temporary_session(tmp_path):
         with pytest.raises(LoginError): await login.start(42,'+79991234567')
         assert list(tmp_path.glob('.login-*')) == []
         await login.shutdown()
+    asyncio.run(run())
+
+
+def test_private_account_management_and_session_check(tmp_path):
+    login=workflow(tmp_path)
+    async def run():
+        await login.start(42,'+79991234567',True)
+        await login.code(42,'12345')
+        assert (await login.status(42))['private'] is True
+        for action in (lambda:login.status(43),lambda:login.check(43),lambda:login.privacy(43,'shared'),lambda:login.remove(43)):
+            with pytest.raises(LoginError): await action()
+        assert (await login.check(42))['checked']['authorized']
+        assert (await login.status(42))['checked']['username']=='test_account'
+        await login.privacy(42,'shared')
+        assert not (await login.status(43))['private']
+        with pytest.raises(LoginError): await login.privacy(43,'private')
+        await login.privacy(42,'private')
+        assert (await login.remove(42))['stage']=='idle'
+        assert not (tmp_path/'telegram.session').exists()
+        await login.shutdown()
+    asyncio.run(run())
+
+
+def test_incomplete_authorization_is_not_saved(tmp_path):
+    class Unauthorized(FakeTelegram):
+        async def is_user_authorized(self): return False
+    login=TelegramLogin(tmp_path/'telegram.session','123','hash',Unauthorized)
+    async def run():
+        await login.start(42,'+79991234567')
+        with pytest.raises(LoginError): await login.code(42,'12345')
+        assert not (tmp_path/'telegram.session').exists()
+        assert (await login.status(42))['stage']=='idle'
     asyncio.run(run())

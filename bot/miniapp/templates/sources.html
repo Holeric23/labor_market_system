@@ -13,10 +13,8 @@
   {% if source %}<small>При изменении адреса создаётся новый источник, а прежний переносится в удалённые вместе с историей.</small>{% endif %}
   <label>Интервал проверки, секунд<input type="number" name="interval_seconds" value="{{ source.interval_seconds if source else 3600 }}" min="60" max="31536000" required></label>
   <label>Размер пакета<input type="number" name="batch_size" value="{{ source.parameters.get('batch_size','') if source else 50 }}" min="1" max="200"></label>
-  <label>Максимум публикаций за запуск<input type="number" name="max_items" value="{{ source.parameters.get('max_items','') if source else 1000 }}" min="1" max="100000"></label>
+  <label>Максимум страниц DesignHunters за запуск<input type="number" name="max_items" value="{{ source.parameters.get('max_items','') if source else 1000 }}" min="1" max="100000"></label>
   <details><summary>Дополнительные параметры</summary>
-    <label>Окно проверки правок Telegram, дней<input type="number" name="overlap_days" value="{{ source.parameters.get('overlap_days','') if source else '' }}" min="1" max="30"></label>
-    <label>Лимит проверки правок<input type="number" name="overlap_limit" value="{{ source.parameters.get('overlap_limit','') if source else '' }}" min="1" max="5000"></label>
     <label>Тайм-аут DesignHunters, мс<input type="number" name="timeout_ms" value="{{ source.parameters.get('timeout_ms','') if source else '' }}" min="1000" max="120000"></label>
     <label>Пауза DesignHunters, секунд<input type="number" name="delay_seconds" value="{{ source.parameters.get('delay_seconds','') if source else '' }}" min="0" max="60"></label>
   </details>
@@ -30,30 +28,27 @@
 <section class="panel">
   <h2>Управление сбором</h2>
   <p>Исполнитель: {% if worker_online %}работает{% else %}не отвечает — задания останутся в очереди до запуска контейнера парсера{% endif %}.</p>
-  <p>Откройте источник ниже и выберите первичный сбор или сбор новых публикаций. Для Telegram сначала выполните первичный сбор.</p>
+  <p>Сбор проверяет публикации в пределах заданного срока. Новые данные становятся доступны после завершения сбора источника.</p>
   <details><summary>Запустить сбор для всех включённых источников</summary>
-    <p>Задания будут выполняться по очереди. При сборе новых публикаций Telegram-каналы без первичного сбора пропускаются.</p>
+    <p>Задания будут выполняться по очереди.</p>
     <form method="post" action="/collection/all"><input type="hidden" name="csrf" value="{{ session.csrf }}">
-      <button name="mode" value="history">Первичный сбор всех</button>
-      <button name="mode" value="new">Собрать новые из всех</button>
+      <button>Запустить сбор всех</button>
     </form>
   </details>
   <a href="/sources">Обновить состояние</a>
   {% if jobs %}
-  <div class="table-scroll"><table><thead><tr><th>Источник</th><th>Режим</th><th>Состояние</th><th>Начало</th><th>Результат</th><th></th></tr></thead><tbody>
+  <div class="table-scroll"><table><thead><tr><th>Источник</th><th>Состояние</th><th>Начало</th><th>Результат</th><th></th></tr></thead><tbody>
   {% for job in jobs %}
-  <tr><td>{{ job.name }}</td><td>{{ 'История' if job.mode == 'history' else 'Новые' }}</td>
+  <tr><td>{{ job.name }}</td>
     <td>{% if job.cancel_requested and job.status == 'running' %}Останавливается{% else %}{{ {'queued':'В очереди','running':'Выполняется','succeeded':'Завершено','failed':'Ошибка','cancelled':'Отменено'}[job.status] }}{% endif %}</td>
     <td>{{ job.started_at or job.requested_at }}</td><td>{% if job.inserted_count is not none %}Новых текстов: {{ job.inserted_count }}{% endif %}{% if job.error %} {{ job.error }}{% endif %}</td>
     <td>{% if job.status in ('queued','running') and not job.cancel_requested %}<form method="post" action="/collection/{{ job.id }}/cancel"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button>Остановить</button></form>{% endif %}</td></tr>
   {% endfor %}</tbody></table></div>{% else %}<p>Заданий сбора пока нет.</p>{% endif %}
 </section>
 <section class="panel"><h2>Удаление старых публикаций</h2>
-  <p>Telegram-парсер собирает публикации от новых к старым, останавливаясь на границе указанного срока. Этот срок действует при сборе независимо от включения очистки. Если достигнут максимум публикаций за запуск, следующий запуск продолжит сбор с сохранённого места.</p>
-  <p>Если очистка включена, после успешного сбора старые публикации удаляются. Сохранённые пользователями вакансии и записи без даты сохраняются. Изменение настройки само по себе очистку не запускает.</p>
+  <p>Telegram-парсер собирает публикации от новых к старым до указанной границы. После успешного сбора устаревшие публикации удаляются. Сохранённые пользователями вакансии и записи без даты сохраняются.</p>
   <form method="post" action="/retention"><input type="hidden" name="csrf" value="{{ session.csrf }}"><input type="hidden" name="revision" value="{{ retention.revision }}">
     <label>Актуальность публикаций, дней<input type="number" name="days" min="1" max="3650" value="{{ retention.retention_days }}" required></label>
-    <label class="check"><input type="checkbox" name="enabled" value="1" {% if retention.retention_enabled %}checked{% endif %}> Автоматически удалять устаревшие публикации после сбора</label>
     <button>Сохранить срок хранения</button>
   </form>
   {% if retention.last_finished_at %}<p><small>Последняя очистка: {{ retention.last_finished_at }}{% if retention.last_error %} · Ошибка: {{ retention.last_error }}{% else %} · Выполнена{% endif %}</small></p>{% endif %}
@@ -76,8 +71,7 @@
         {% if source.enabled %}
         <form method="post" action="/sources/{{ source.id }}/collect">
           <input type="hidden" name="csrf" value="{{ session.csrf }}">
-          <button name="mode" value="history">Первичный сбор</button>
-          <button name="mode" value="new">Собрать новые</button>
+          <button>Запустить сбор</button>
         </form>
         {% else %}<p><small>Включите источник, чтобы запустить сбор.</small></p>{% endif %}
         <form method="post" action="/sources/{{ source.id }}/edit">

@@ -1,6 +1,7 @@
 """One bot container hosts the Telegram adapter and the admin Mini App."""
 import asyncio
 import ipaddress
+import logging
 import os
 from aiogram import Bot, Dispatcher
 import uvicorn
@@ -12,6 +13,7 @@ from database.repository import Repository
 
 
 async def main():
+    logging.basicConfig(level=logging.INFO)
     settings = Settings.load()
     await asyncio.to_thread(migrate)
     if settings.owner_ids:

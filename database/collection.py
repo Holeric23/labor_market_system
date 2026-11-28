@@ -13,7 +13,7 @@ def _enqueue(con, source, mode, actor):
     return row['id'] if row else None
 
 
-def enqueue(actor, source_id, mode):
+def enqueue(actor, source_id, mode='history'):
     if type(source_id) is not int or not 0 < source_id < 2**63 or mode not in ('new','history'):
         raise ValueError('Некорректное задание сбора.')
     with connect() as con:
@@ -21,15 +21,13 @@ def enqueue(actor, source_id, mode):
         source = con.execute('SELECT * FROM sources WHERE id=%s AND enabled AND deleted_at IS NULL FOR UPDATE', (source_id,)).fetchone()
         if not source:
             raise ValueError('Источник не найден или выключен.')
-        if source['kind']=='telegram' and mode=='new' and 'high_water' not in source['cursor']:
-            raise ValueError('Сначала запустите первичный сбор истории для этого Telegram-канала.')
-        job = _enqueue(con,source,mode,actor)
+        job = _enqueue(con,source,'history' if source['kind']=='telegram' else 'new',actor)
         if not job:
             raise ValueError('Для этого источника сбор уже выполняется или ожидает запуска.')
         return job
 
 
-def enqueue_all(actor, mode):
+def enqueue_all(actor, mode='history'):
     if mode not in ('new','history'):
         raise ValueError('Некорректный режим сбора.')
     with connect() as con:
@@ -37,9 +35,7 @@ def enqueue_all(actor, mode):
         sources = con.execute('SELECT * FROM sources WHERE enabled AND deleted_at IS NULL ORDER BY id FOR UPDATE').fetchall()
         created = 0
         for source in sources:
-            if source['kind']=='telegram' and mode=='new' and 'high_water' not in source['cursor']:
-                continue
-            if _enqueue(con,source,mode,actor):
+            if _enqueue(con,source,'history' if source['kind']=='telegram' else 'new',actor):
                 created += 1
         return created
 
@@ -47,11 +43,10 @@ def enqueue_all(actor, mode):
 def enqueue_due():
     with connect() as con:
         sources = con.execute('''SELECT * FROM sources WHERE enabled AND deleted_at IS NULL
-          AND schedule_enabled AND next_run_at<=now()
-          AND (kind<>'telegram' OR cursor ? 'high_water') ORDER BY next_run_at,id FOR UPDATE SKIP LOCKED''').fetchall()
+          AND schedule_enabled AND next_run_at<=now() ORDER BY next_run_at,id FOR UPDATE SKIP LOCKED''').fetchall()
         created = 0
         for source in sources:
-            if _enqueue(con,source,'new',None):
+            if _enqueue(con,source,'history' if source['kind']=='telegram' else 'new',None):
                 con.execute("UPDATE sources SET next_run_at=now()+(interval_seconds * interval '1 second') WHERE id=%s", (source['id'],))
                 created += 1
         return created
@@ -198,6 +193,7 @@ def heartbeat():
 def recover_interrupted():
     with connect() as con:
         con.execute("UPDATE parser_runs SET state='failed',finished_at=now(),error='Interrupted' WHERE state='running'")
+        con.execute("DELETE FROM collection_staged_publications WHERE run_id IN (SELECT id FROM parser_runs WHERE state <> 'running')")
         con.execute("""UPDATE collection_jobs j SET
           status=CASE WHEN j.cancel_requested THEN 'cancelled'
                       WHEN (SELECT state FROM parser_runs WHERE id=j.parser_run_id)='succeeded' THEN 'succeeded'

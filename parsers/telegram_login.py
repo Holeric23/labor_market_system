@@ -12,9 +12,13 @@ async def main():
         raise ValueError('Set TELEGRAM_API_ID and TELEGRAM_API_HASH')
     folder = STATE_DIR/'collection'
     folder.mkdir(parents=True,exist_ok=True)
-    async with TelegramClient(str(folder/'telegram.session'),int(api_id),api_hash) as client:
+    client = TelegramClient(str(folder/'telegram.session'),int(api_id),api_hash)
+    try:
+        await client.connect()
         if not await client.is_user_authorized():
-            raise RuntimeError('Telegram login was not completed')
+            raise RuntimeError('Telegram login was not completed; use the admin panel')
+    finally:
+        await client.disconnect()
     print('Parser session configured.')
 
 

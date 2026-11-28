@@ -1,5 +1,6 @@
 """Telegram interface for customer search and owner administration."""
 import asyncio
+import logging
 import uuid
 
 from aiogram import F, Router, BaseMiddleware
@@ -11,6 +12,8 @@ from database.client import ClientRepository, DOCUMENT_LABELS, REQUIRED
 from database.repository import Repository
 from database.search import normalize
 from bot.ui_messages import UIMessageManager
+
+logger = logging.getLogger(__name__)
 
 
 def keyboard(rows):
@@ -59,6 +62,7 @@ class AvailabilityMiddleware(BaseMiddleware):
         if isinstance(event, CallbackQuery):
             await event.answer(UNAVAILABLE, show_alert=True)
         elif isinstance(event, InlineQuery):
+            logger.info('Inline-запрос отклонён: бот временно закрыт для клиента')
             await event.answer([], cache_time=0, is_personal=True)
         elif isinstance(event, Message) and event.from_user and event.chat.type == 'private' and event.chat.id == event.from_user.id:
             await self.ui.menu(event,UNAVAILABLE)
@@ -254,7 +258,7 @@ def make_router(settings):
     async def start(message):
         if not private(message,message.from_user):
             return
-        await run(clients.register,message.from_user.id)
+        await run(clients.register,message.from_user.id,message.from_user.first_name,message.from_user.last_name,message.from_user.username)
         args = (message.text or '').split(maxsplit=1)
         if len(args) == 2 and args[1].startswith('grant_'):
             try:
@@ -274,6 +278,7 @@ def make_router(settings):
     async def issue_inline(query):
         actor = query.from_user.id
         if not await run(clients.can_issue,actor):
+            logger.info('Inline-запрос отклонён: нет прав на выдачу')
             await query.answer([],cache_time=0,is_personal=True)
             return
         raw = query.query.strip()
@@ -291,7 +296,9 @@ def make_router(settings):
                 input_message_content=InputTextMessageContent(message_text='Доступ готов к активации. Откройте бота, ознакомьтесь с условиями и активируйте доступ.'),
                 reply_markup=keyboard([[link('Активировать доступ',f'https://t.me/{bot.username}?start=grant_{token}')]]))
             await query.answer([result],cache_time=0,is_personal=True)
+            logger.info('Inline-запрос обработан: карточка доступа отправлена Telegram')
         except ValueError:
+            logger.info('Inline-запрос отклонён: неверный срок или отсутствует username бота')
             await query.answer([],cache_time=0,is_personal=True)
 
     @router.message(Command('admin'))
@@ -310,7 +317,7 @@ def make_router(settings):
             return
         await query.answer()
         user, message, data = query.from_user.id, query.message, query.data or ''
-        await run(clients.register,user)
+        await run(clients.register,user,query.from_user.first_name,query.from_user.last_name,query.from_user.username)
         try:
             if data == 'home':
                 await home(message); return
@@ -477,7 +484,7 @@ def make_router(settings):
         if not private(message,message.from_user):
             return
         user = message.from_user.id
-        await run(clients.register,user)
+        await run(clients.register,user,message.from_user.first_name,message.from_user.last_name,message.from_user.username)
         if not await require_ready(message,user):
             return
         try:

@@ -200,13 +200,16 @@ def create_app(settings):
         session = owner(request)
         if request.url.scheme != 'https':
             raise HTTPException(403,'Для входа в Telegram требуется HTTPS.')
-        if action not in ('start','code','password','cancel'):
+        if action not in ('start','code','password','cancel','check','privacy','remove'):
             raise HTTPException(404,'Действие не найдено.')
         if action != 'cancel' and not parser_login_allowed(request):
             raise HTTPException(403,'Вход доступен только через настроенный собственный HTTPS-адрес.')
         data = await form(request,max_bytes=4096)
         csrf(request,data)
-        result = await run_in_threadpool(parser_auth.request,action,session['telegram_id'],data.get('value',''))
+        value = {'phone':data.get('value',''),'private':data.get('private') == '1'} if action == 'start' else data.get('value','')
+        if action == 'privacy' and not value:
+            value = 'shared'
+        result = await run_in_threadpool(parser_auth.request,action,session['telegram_id'],value)
         # The service returns only fixed, non-secret error messages.
         notice = result.get('error','') if not result.get('ok') else ''
         location = '/parser/telegram' + ('?' + urlencode({'notice':notice}) if notice else '')
@@ -256,7 +259,7 @@ def create_app(settings):
         data = await form(request)
         csrf(request,data)
         try:
-            await run_in_threadpool(collection.enqueue,session['telegram_id'],source_id,data.get('mode',''))
+            await run_in_threadpool(collection.enqueue,session['telegram_id'],source_id)
         except (ValueError, PermissionError, OverflowError) as exc:
             raise HTTPException(400,str(exc)) from None
         return RedirectResponse('/sources',status_code=303)
@@ -267,7 +270,7 @@ def create_app(settings):
         data = await form(request)
         csrf(request,data)
         try:
-            await run_in_threadpool(collection.enqueue_all,session['telegram_id'],data.get('mode',''))
+            await run_in_threadpool(collection.enqueue_all,session['telegram_id'])
         except (ValueError, PermissionError, OverflowError) as exc:
             raise HTTPException(400,str(exc)) from None
         return RedirectResponse('/sources',status_code=303)
@@ -290,7 +293,7 @@ def create_app(settings):
         csrf(request,data)
         try:
             await run_in_threadpool(collection.save_retention,session['telegram_id'],
-                data.get('enabled') == '1',int(data.get('days','')),int(data.get('revision','')))
+                                    True,int(data.get('days','')),int(data.get('revision','')))
         except (ValueError, PermissionError, OverflowError) as exc:
             raise HTTPException(400,str(exc)) from None
         return RedirectResponse('/sources',status_code=303)

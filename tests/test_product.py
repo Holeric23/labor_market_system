@@ -158,6 +158,26 @@ def test_deduplication_versions_and_original_text_once():
         page(42,{'skill_ids':[999999999]})
 
 
+def test_edited_publication_does_not_leave_old_text_in_search():
+    from database.search import _query, normalize
+    repo=Repository(); repo.bootstrap_owners({42})
+    address='https://t.me/edit_'+uuid.uuid4().hex[:12]
+    source_id=repo.save_source(42,'telegram','Fixture',address,3600,True)
+    run_id=uuid.uuid4()
+    with connect() as con:
+        source=con.execute('SELECT * FROM sources WHERE id=%s',(source_id,)).fetchone()
+        con.execute("INSERT INTO parser_runs(id,source_id,state) VALUES (%s,%s,'running')",(run_id,source_id))
+    old='old fixture '+address; new='updated fixture '+address
+    for text in (old,new):
+        item=SimpleNamespace(url=address+'/1',text=text,published_at=datetime.now(timezone.utc))
+        store_batch(source,run_id,SimpleNamespace(publications=[item],cursor={'source':{}}),FakeInference())
+    with connect() as con:
+        active=con.execute('SELECT result_set_id FROM active_result_set WHERE singleton=true').fetchone()['result_set_id']
+        rows,_=_query(con,active,normalize({}),0,100)
+        texts={row['text'] for row in rows}
+        assert new in texts and old not in texts
+
+
 def _csrf(page):
     return re.search(r'name="csrf" value="([^"]+)"',page.text)[1]
 
@@ -168,6 +188,26 @@ def _init_data(token, identity):
     secret = hmac.new(b'WebAppData',token.encode(),hashlib.sha256).digest()
     values['hash'] = hmac.new(secret,payload.encode(),hashlib.sha256).hexdigest()
     return urlencode(values)
+
+
+def test_client_profiles_display_telegram_identity():
+    from database.client import ClientRepository
+    repo=Repository(); repo.bootstrap_owners({42})
+    clients=ClientRepository(); user=713001
+    clients.register(user,'Имя','Фамилия','example_user')
+    row=repo.client(42,user)
+    assert row['display_name']=='Имя Фамилия' and row['username']=='example_user'
+    token='offline-fixture-token'
+    app=create_app(Settings(token,frozenset({42}),None,('testserver',)))
+    with TestClient(app,base_url='https://testserver') as browser:
+        login=browser.get('/miniapp')
+        assert browser.post('/miniapp',data={'csrf':_csrf(login),'init_data':_init_data(token,42)},follow_redirects=False).status_code==303
+        assert '@example_user' in browser.get('/clients').text
+        page=browser.get(f'/clients/{user}')
+        assert 'Имя Фамилия' in page.text and 'href="https://t.me/example_user"' in page.text
+        clients.register(user,'Новое имя',None,None)
+        assert 'Новое имя' in browser.get('/clients').text
+        assert 'Имя пользователя Telegram не указано' in browser.get(f'/clients/{user}').text
 
 
 def test_miniapp_signature_csrf_admin_routes_and_replay():

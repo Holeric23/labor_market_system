@@ -1,5 +1,7 @@
 """Offline coverage of Telegram collection boundaries and checkpoints."""
 import asyncio
+import sys
+import types
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
@@ -111,3 +113,32 @@ def test_missing_telegram_date_does_not_make_post_fresh():
     client = FakeTelegram([SimpleNamespace(id=1, date=None, text='post')])
     with pytest.raises(ValueError, match='дата'):
         run(client, 'history')
+
+
+def test_parser_reuses_existing_session_without_requesting_another_code(monkeypatch,tmp_path):
+    from parsers.adapters import batches
+    from parsers.market_system.collection.runner import Batch
+    path=tmp_path/'collection'/'telegram.session'
+    path.parent.mkdir(); path.write_text('fake session')
+    calls=[]
+    class Client:
+        def __init__(self,session,api_id,api_hash,**kwargs): calls.append(('session',session))
+        async def connect(self): calls.append(('connect',))
+        async def is_user_authorized(self): return True
+        async def disconnect(self): calls.append(('disconnect',))
+    class Parser:
+        def __init__(self,*args,**kwargs): pass
+        async def managed_batches(self,client,name,address,mode,cursor,parameters):
+            calls.append(('mode',mode))
+            yield Batch([],cursor,True)
+    telethon=types.ModuleType('telethon'); telethon.TelegramClient=Client
+    paths=types.ModuleType('market_system.paths'); paths.STATE_DIR=tmp_path
+    telegram=types.ModuleType('market_system.core.parsers.telegram.telegram_parser'); telegram.TelegramParser=Parser
+    monkeypatch.setitem(sys.modules,'telethon',telethon)
+    monkeypatch.setitem(sys.modules,'market_system.paths',paths)
+    monkeypatch.setitem(sys.modules,'market_system.core.parsers.telegram.telegram_parser',telegram)
+    monkeypatch.setenv('TELEGRAM_API_ID','123'); monkeypatch.setenv('TELEGRAM_API_HASH','fixture')
+    source={'kind':'telegram','name':'Fixture','address':'https://t.me/fixture','parameters':{},'cursor':{},'freshness_cutoff':NOW.isoformat()}
+    async def run(): return [batch async for batch in batches(source,'new')]
+    assert len(asyncio.run(run()))==1
+    assert calls==[('session',str(path)),('connect',),('mode','history'),('disconnect',)]

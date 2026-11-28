@@ -380,8 +380,8 @@ class Repository:
                      r.work_format, max(rp.published_at) AS published_at, min(p.url) AS source_url
               FROM active_result_set a JOIN document_results r ON r.result_set_id=a.result_set_id
               JOIN contents c ON c.id=r.content_id
-              LEFT JOIN result_publications rp ON rp.result_set_id=r.result_set_id AND rp.content_id=c.id
-              LEFT JOIN publications p ON p.id=rp.publication_id
+              JOIN result_publications rp ON rp.result_set_id=r.result_set_id AND rp.content_id=c.id
+              JOIN publications p ON p.id=rp.publication_id
               WHERE r.post_type='vacancy'
               GROUP BY c.id,r.salary_from,r.salary_to,r.currency,r.salary_period,r.work_format
               ORDER BY max(rp.published_at) DESC NULLS LAST,c.id DESC LIMIT %s OFFSET %s''', (limit,offset)).fetchall()

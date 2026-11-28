@@ -121,7 +121,7 @@ def _query(con, result_set, filters, offset, page_size, *, exclude_user=None):
       FROM result_publications rp JOIN publications pub ON pub.id=rp.publication_id
       WHERE rp.result_set_id=%s GROUP BY rp.content_id)
       SELECT c.id,c.text,r.salary_from,r.salary_to,r.currency,r.salary_period,r.work_format,p.published_at,p.source_url
-      FROM document_results r JOIN contents c ON c.id=r.content_id LEFT JOIN p ON p.content_id=r.content_id WHERE ''' + ' AND '.join(where) + '''
+      FROM document_results r JOIN contents c ON c.id=r.content_id JOIN p ON p.content_id=r.content_id WHERE ''' + ' AND '.join(where) + '''
       ORDER BY p.published_at DESC NULLS LAST,c.id DESC LIMIT %s OFFSET %s'''
     rows = con.execute(sql,args).fetchall()
     return rows[:page_size], len(rows)>page_size

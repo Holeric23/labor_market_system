@@ -47,10 +47,17 @@ class LoginServer:
                     value = json.loads(self.rfile.read(size).decode('utf-8'))
                     if not isinstance(value,dict) or set(value)-{'action','actor','value'}: raise ValueError()
                     action,actor = value.get('action'),value.get('actor')
-                    if action not in ('status','start','code','password','cancel'): raise ValueError()
+                    if action not in ('status','start','code','password','cancel','check','privacy','remove'): raise ValueError()
                     if type(actor) is not int or not 0 < actor < 2**63: raise ValueError()
                     method = getattr(outer.workflow,action)
-                    coroutine = method(actor,value.get('value','')) if action in ('start','code','password') else method(actor)
+                    payload = value.get('value','')
+                    if action == 'start' and isinstance(payload,dict):
+                        if set(payload) != {'phone','private'} or type(payload['private']) is not bool: raise ValueError()
+                        coroutine = method(actor,payload['phone'],payload['private'])
+                    elif action in ('start','code','password','privacy'):
+                        coroutine = method(actor,payload)
+                    else:
+                        coroutine = method(actor)
                 except (ValueError,UnicodeError,TypeError,json.JSONDecodeError):
                     return self.reply(400,{'ok':False,'error':'Некорректный запрос.'})
                 future = asyncio.run_coroutine_threadsafe(coroutine,outer.loop)

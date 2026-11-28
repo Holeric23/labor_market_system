@@ -365,8 +365,8 @@ def test_inline_manager_authorization():
     dp = Dispatcher(); dp.include_router(make_router(settings))
     async def run():
         from aiogram.types import InlineQuery
-        async def query(user,index):
-            update = Update(update_id=index,inline_query=InlineQuery(id=str(index),from_user=User(id=user,is_bot=False,first_name='Test'),query='45',offset=''))
+        async def query(user,index,value='45'):
+            update = Update(update_id=index,inline_query=InlineQuery(id=str(index),from_user=User(id=user,is_bot=False,first_name='Test'),query=value,offset=''))
             await dp.feed_update(bot,update)
         await query(99999,1)
         assert session.inline[-1].results == []
@@ -374,6 +374,8 @@ def test_inline_manager_authorization():
         result = session.inline[-1]
         assert result.is_personal and result.cache_time == 0 and len(result.results) == 1
         assert 'grant_' in result.results[0].reply_markup.inline_keyboard[0][0].url
+        await query(42,3,'')
+        assert len(session.inline[-1].results)==1
     asyncio.run(run())
 
 
@@ -402,7 +404,7 @@ def test_bot_availability_and_admin_access():
         message=Message(message_id=2,date=datetime.now(timezone.utc),chat=Chat(id=user,type='private'),text='Menu')
         await dp.feed_update(bot,Update(update_id=2,callback_query=CallbackQuery(id='cb',from_user=person,chat_instance='t',message=message,data='search')))
         assert session.callbacks[-1].show_alert and session.callbacks[-1].text == UNAVAILABLE
-        await dp.feed_update(bot,Update(update_id=3,inline_query=InlineQuery(id='q',from_user=admin,query='30',offset='')))
+        await dp.feed_update(bot,Update(update_id=3,inline_query=InlineQuery(id='q',from_user=admin,query='',offset='')))
         assert len(session.inline[-1].results) == 1
         await dp.feed_update(bot,msg(admin,'/admin',4))
         assert session.sent[-1].reply_markup.inline_keyboard[0][0].web_app.url == 'https://example.test/miniapp'

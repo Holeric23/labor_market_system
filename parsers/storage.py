@@ -8,6 +8,33 @@ from psycopg.types.json import Jsonb
 from database.connection import connect
 
 
+def stage_batch(source, run_id, batch):
+    """Save raw posts without changing the active search results or source cursor."""
+    with connect() as con:
+        current = con.execute('SELECT enabled,deleted_at,revision FROM sources WHERE id=%s FOR UPDATE', (source['id'],)).fetchone()
+        if not current or not current['enabled'] or current['deleted_at'] is not None or current['revision'] != source['revision']:
+            raise ValueError('Настройки источника изменились во время запуска')
+        for publication in batch.publications:
+            published_at = publication.published_at
+            if published_at and (published_at.tzinfo is None or published_at.utcoffset() is None):
+                published_at = None
+            con.execute('''INSERT INTO collection_staged_publications(run_id,url,text,published_at) VALUES (%s,%s,%s,%s)
+              ON CONFLICT(run_id,url) DO UPDATE SET text=excluded.text,published_at=excluded.published_at''',
+              (run_id,publication.url,publication.text,published_at))
+
+
+def staged_batch(run_id, cursor):
+    from types import SimpleNamespace
+    with connect() as con:
+        rows = con.execute('SELECT url,text,published_at FROM collection_staged_publications WHERE run_id=%s ORDER BY url', (run_id,)).fetchall()
+    return SimpleNamespace(publications=[SimpleNamespace(**row) for row in rows],cursor=cursor)
+
+
+def discard_staged(run_id):
+    with connect() as con:
+        con.execute('DELETE FROM collection_staged_publications WHERE run_id=%s', (run_id,))
+
+
 def _number(value):
     if value is None:
         return None
@@ -51,7 +78,18 @@ def _insert_result(con, result_set, content_id, result, inference):
         con.execute("INSERT INTO document_classes(result_set_id,content_id,class_id,role) VALUES (%s,%s,%s,'none') ON CONFLICT DO NOTHING", (result_set,content_id,class_id))
 
 
-def store_batch(source, run_id, batch, inference):
+def _complete_job(con, source, run_id, job_id, created):
+    if job_id is None:
+        return
+    job = con.execute("SELECT status,cancel_requested FROM collection_jobs WHERE id=%s FOR UPDATE", (job_id,)).fetchone()
+    if not job or job['status'] != 'running' or job['cancel_requested']:
+        raise ValueError('Сбор отменён')
+    con.execute("UPDATE parser_runs SET state='succeeded',finished_at=now(),inserted_count=%s WHERE id=%s", (created,run_id))
+    con.execute("UPDATE sources SET last_success_at=now(),next_run_at=now()+(interval_seconds * interval '1 second') WHERE id=%s AND revision=%s", (source['id'],source['revision']))
+    con.execute("UPDATE collection_jobs SET status='succeeded',finished_at=now(),error=NULL WHERE id=%s", (job_id,))
+
+
+def store_batch(source, run_id, batch, inference, job_id=None):
     """Retain old ready sets and commit source cursor only with its data."""
     with connect() as con:
         con.execute('SELECT pg_advisory_xact_lock(%s)', (174925603,))
@@ -60,6 +98,7 @@ def store_batch(source, run_id, batch, inference):
             raise ValueError('Настройки источника изменились во время запуска')
         if not batch.publications:
             con.execute('UPDATE sources SET cursor=%s WHERE id=%s', (Jsonb(batch.cursor['source']),source['id']))
+            _complete_job(con,source,run_id,job_id,0)
             return 0
         existing_model = con.execute('SELECT manifest FROM model_versions WHERE id=%s', (inference.version,)).fetchone()
         if existing_model and existing_model['manifest'] != inference.manifest:
@@ -115,4 +154,5 @@ def store_batch(source, run_id, batch, inference):
           ON CONFLICT(singleton) DO UPDATE SET result_set_id=excluded.result_set_id''', (result_set,))
         con.execute('INSERT INTO result_set_switches(previous_id,result_set_id,actor) VALUES (%s,%s,%s)', (active['id'] if active else None,result_set,'parser:'+str(run_id)))
         con.execute('UPDATE sources SET cursor=%s WHERE id=%s', (Jsonb(batch.cursor['source']),source['id']))
+        _complete_job(con,source,run_id,job_id,created)
         return created

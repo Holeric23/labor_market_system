@@ -1,6 +1,7 @@
 """Customer-facing operations; caller identity is always a Telegram user ID."""
 import hashlib
 import json
+import re
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -51,10 +52,17 @@ def _ready(con, user):
 
 
 class ClientRepository:
-    def register(self, user):
+    def register(self, user, first_name=None, last_name=None, username=None):
         _positive_id(user)
         with connect() as con:
-            con.execute('INSERT INTO clients(telegram_id) VALUES (%s) ON CONFLICT DO NOTHING', (user,))
+            if first_name is None:
+                con.execute('INSERT INTO clients(telegram_id) VALUES (%s) ON CONFLICT DO NOTHING', (user,))
+            else:
+                name = ' '.join(part.strip() for part in (first_name,last_name) if isinstance(part,str) and part.strip())[:150] or None
+                username = username if isinstance(username,str) and re.fullmatch(r'[A-Za-z0-9_]{1,32}',username) else None
+                con.execute('''INSERT INTO clients(telegram_id,display_name,username) VALUES (%s,%s,%s)
+                  ON CONFLICT(telegram_id) DO UPDATE SET display_name=excluded.display_name,username=excluded.username,updated_at=now()''',
+                  (user,name,username))
             con.execute('INSERT INTO client_interface_state(telegram_id) VALUES (%s) ON CONFLICT DO NOTHING', (user,))
 
     def documents(self, user):

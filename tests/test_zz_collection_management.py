@@ -28,17 +28,17 @@ def source():
 def test_collection_queue_and_scheduler():
     repo,identity,address = source()
     with pytest.raises(PermissionError): collection.enqueue(99999,identity,'history')
-    with pytest.raises(ValueError): collection.enqueue(42,identity,'new')
-    job = collection.enqueue(42,identity,'history')
+    job = collection.enqueue(42,identity,'new')
     with pytest.raises(ValueError): collection.enqueue(42,identity,'history')
     collection.cancel(42,job)
     with connect() as con:
         assert con.execute('SELECT status FROM collection_jobs WHERE id=%s',(job,)).fetchone()['status'] == 'cancelled'
+        con.execute("UPDATE sources SET next_run_at=now()+interval '1 day' WHERE id<>%s AND schedule_enabled",(identity,))
         con.execute("UPDATE sources SET cursor=%s,schedule_enabled=true,next_run_at=now()-interval '1 minute' WHERE id=%s",(Jsonb({'high_water':10}),identity))
     assert collection.enqueue_due() >= 1
     with connect() as con:
         queued = con.execute("SELECT * FROM collection_jobs WHERE source_id=%s AND status='queued'",(identity,)).fetchone()
-        assert queued and queued['mode'] == 'new'
+        assert queued and queued['mode'] == 'history'
         assert con.execute('SELECT next_run_at>now() AS future FROM sources WHERE id=%s',(identity,)).fetchone()['future']
     assert collection.enqueue_due() == 0
     collection.cancel(42,queued['id'])
@@ -80,7 +80,52 @@ def test_cancel_running_collection_between_batches(monkeypatch):
     with connect() as con:
         row=con.execute('SELECT status,parser_run_id FROM collection_jobs WHERE id=%s',(job,)).fetchone()
         assert not success and row['status']=='cancelled'
-        assert con.execute('SELECT count(*) AS n FROM publications WHERE source_id=%s',(identity,)).fetchone()['n']==1
+        assert con.execute('SELECT count(*) AS n FROM publications WHERE source_id=%s',(identity,)).fetchone()['n']==0
+        assert con.execute('SELECT count(*) AS n FROM collection_staged_publications WHERE run_id=%s',(row['parser_run_id'],)).fetchone()['n']==0
+
+
+def test_collection_publishes_only_after_all_batches_succeed(monkeypatch):
+    import parsers.__main__ as runner
+    repo,identity,address=source()
+    job=collection.enqueue(42,identity)
+    claimed=collection.claim_job()
+    assert claimed['id']==job
+    now=datetime.now(timezone.utc)
+    with connect() as con:
+        original=con.execute('SELECT result_set_id FROM active_result_set WHERE singleton=true').fetchone()
+    async def fake_batches(source,mode):
+        for i in (1,2):
+            yield SimpleNamespace(publications=[SimpleNamespace(url=address+'/'+str(i),text='same text '+address,published_at=now)],cursor={'source':{'high_water':i}})
+            with connect() as con:
+                assert con.execute('SELECT count(*) AS n FROM publications WHERE source_id=%s',(identity,)).fetchone()['n']==0
+                assert con.execute('SELECT result_set_id FROM active_result_set WHERE singleton=true').fetchone()==original
+    monkeypatch.setattr(runner,'batches',fake_batches)
+    assert asyncio.run(runner.run_source(claimed['source'],'history',FakeInference(),job))
+    with connect() as con:
+        assert con.execute('SELECT count(*) AS n FROM publications WHERE source_id=%s',(identity,)).fetchone()['n']==2
+        assert con.execute('SELECT count(DISTINCT current_content_id) AS n FROM publications WHERE source_id=%s',(identity,)).fetchone()['n']==1
+        assert con.execute('SELECT status FROM collection_jobs WHERE id=%s',(job,)).fetchone()['status']=='succeeded'
+        assert con.execute('SELECT count(*) AS n FROM collection_staged_publications').fetchone()['n']==0
+
+
+def test_collection_error_does_not_publish_partial_data(monkeypatch):
+    import parsers.__main__ as runner
+    repo,identity,address=source()
+    job=collection.enqueue(42,identity)
+    claimed=collection.claim_job()
+    assert claimed['id']==job
+    with connect() as con:
+        original=con.execute('SELECT result_set_id FROM active_result_set WHERE singleton=true').fetchone()
+    async def fake_batches(source,mode):
+        yield SimpleNamespace(publications=[SimpleNamespace(url=address+'/1',text='partial '+address,published_at=datetime.now(timezone.utc))],cursor={'source':{'high_water':1}})
+        raise TimeoutError('fixture')
+    monkeypatch.setattr(runner,'batches',fake_batches)
+    assert not asyncio.run(runner.run_source(claimed['source'],'history',FakeInference(),job))
+    collection.finish_job(job,False,'timeout')
+    with connect() as con:
+        assert con.execute('SELECT count(*) AS n FROM publications WHERE source_id=%s',(identity,)).fetchone()['n']==0
+        assert con.execute('SELECT result_set_id FROM active_result_set WHERE singleton=true').fetchone()==original
+        assert con.execute('SELECT count(*) AS n FROM collection_staged_publications').fetchone()['n']==0
 
 
 def test_retention_preserves_saved_unknown_recent_and_shared_content():
